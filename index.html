@@ -39,6 +39,142 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)!im
 <script type="text/babel">
 const {useState,useEffect,useCallback,useRef}=React;
 
+// ══════════════════════════════════════════════════════════════════
+// ⚠️  DEMO MODE — SOLO PARA PRUEBAS VISUALES
+// ⚠️  Cambiar a false antes de producción
+// ══════════════════════════════════════════════════════════════════
+const DEMO_MODE = true;
+
+const DEMO_USER = {
+  displayName: 'Guillermo Sánchez',
+  mail: 'gsanchezl@fyttsa.com',
+  userPrincipalName: 'gsanchezl@fyttsa.com',
+};
+
+const DEMO_DATA = {
+  usuarios: [
+    {Id:1, Correo:'gsanchezl@fyttsa.com', Rol:'Administrador', Activo:true, Title:'Guillermo Sánchez'},
+    {Id:2, Correo:'contadora@fyttsa.com', Rol:'Contador', Activo:true, Title:'María García'},
+    {Id:3, Correo:'finanzas@fyttsa.com', Rol:'Finanzas', Activo:true, Title:'Carlos López'},
+    {Id:4, Correo:'solicitante@fyttsa.com', Rol:'Solicitante', Activo:true, Title:'Ana Martínez'},
+  ],
+  solicitudes: [
+    {Id:1, Folio:'SOL-2025-0001', Proveedor:'Ferretería Industrial SA', RFC_Proveedor:'FIS890101ABC', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'A-00123', Tipo_Documento:'Factura', Importe:85000, Subtotal:73275.86, IVA:11724.14, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-10', Status:'Capturado', Notas:'Urgente para continuar obra', Solicitante:'Ana Martínez'},
+    {Id:2, Folio:'SOL-2025-0002', Proveedor:'Concretos del Norte', RFC_Proveedor:'CNO920315XYZ', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'B-00456', Tipo_Documento:'Factura', Importe:42000, Subtotal:36206.90, IVA:5793.10, Metodo_Pago:'Transferencia', Prioridad:'Media', Fecha_Requerida:'2025-06-15', Status:'Autorizado por contabilidad', Notas:'', Solicitante:'Ana Martínez'},
+    {Id:3, Folio:'SOL-2025-0003', Proveedor:'Servicios Eléctricos MX', RFC_Proveedor:'SEM010101DEF', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Instalaciones especiales', Centro_Costo:'Obra Bodega Sur', Factura:'COT-2025-0001', Tipo_Documento:'Cotización', Importe:28500, Subtotal:24568.97, IVA:3931.03, Metodo_Pago:'Transferencia', Prioridad:'Baja', Fecha_Requerida:'2025-06-20', Status:'En revisión contable', Notas:'Cotización previa al trabajo', Solicitante:'Guillermo Sánchez'},
+    {Id:4, Folio:'SOL-2025-0004', Proveedor:'Transportes Rápidos SA', RFC_Proveedor:'TRS950601GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Operaciones', Categoria:'Mantenimiento vehicular', Centro_Costo:'Administración', Factura:'C-00789', Tipo_Documento:'Factura', Importe:15200, Subtotal:13103.45, IVA:2096.55, Metodo_Pago:'Tarjeta empresarial', Prioridad:'Media', Fecha_Requerida:'2025-06-08', Status:'Programado', Fecha_Programada:'2025-06-08', Notas:'', Solicitante:'Carlos López'},
+    {Id:5, Folio:'SOL-2025-0005', Proveedor:'Papelería y Oficinas SA', RFC_Proveedor:'POS880901JKL', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Administración', Categoria:'Papelería y consumibles admon.', Centro_Costo:'Administración', Factura:'D-00321', Tipo_Documento:'Factura', Importe:3800, Subtotal:3275.86, IVA:524.14, Metodo_Pago:'Efectivo', Prioridad:'Baja', Fecha_Requerida:'2025-06-12', Status:'Pagado', Fecha_Pago:'2025-06-05', Notas:'', Solicitante:'Ana Martínez'},
+  ],
+  proveedores: [
+    {Id:1, Title:'Ferretería Industrial SA', Clave:'FER001', RFC:'FIS890101ABC', CLABE:'012345678901234567', Banco:'BBVA'},
+    {Id:2, Title:'Concretos del Norte', Clave:'CON001', RFC:'CNO920315XYZ', CLABE:'021345678901234568', Banco:'BANAMEX'},
+    {Id:3, Title:'Servicios Eléctricos MX', Clave:'ELE001', RFC:'SEM010101DEF', CLABE:'', Banco:''},
+    {Id:4, Title:'Transportes Rápidos SA', Clave:'TRA001', RFC:'TRS950601GHI', CLABE:'032145678901234569', Banco:'SANTANDER'},
+  ],
+  razones: [
+    {Id:1, Title:'Constructora FYTTSA SA de CV', RFC:'CFY850101MNO'},
+    {Id:2, Title:'Inmobiliaria FYTTSA SA de CV', RFC:'IFY900215PQR'},
+  ],
+  cats: ['Materiales de construcción','Instalaciones especiales','Mantenimiento vehicular','Papelería y consumibles admon.','Honorarios y subcontratistas','Seguridad social (IMSS/INFONAVIT)','Electricidad','Agua y drenaje','Otro'],
+  areas: ['Construcción','Administración','Operaciones','Contabilidad','Dirección','Compras'],
+  bitacora: [
+    {Id:1, Usuario:'Guillermo Sánchez', Accion:'Inició sesión', Detalle:'gsanchezl@fyttsa.com', Modulo:'Login', Fecha:'2025-06-07T08:30:00'},
+    {Id:2, Usuario:'Ana Martínez', Accion:'Creó solicitud', Detalle:'SOL-2025-0001 · Ferretería Industrial SA · $85,000', Modulo:'Solicitudes', Fecha:'2025-06-07T09:15:00'},
+    {Id:3, Usuario:'Guillermo Sánchez', Accion:'Aprobó solicitud', Detalle:'SOL-2025-0001 · En revisión contable', Modulo:'Aprobaciones', Fecha:'2025-06-07T10:00:00'},
+    {Id:4, Usuario:'María García', Accion:'Validó CFDI', Detalle:'SOL-2025-0001 · Autorizado por contabilidad', Modulo:'Contabilidad', Fecha:'2025-06-07T11:30:00'},
+    {Id:5, Usuario:'Carlos López', Accion:'Programó pago', Detalle:'SOL-2025-0004 · Programado · 08/Jun', Modulo:'Finanzas', Fecha:'2025-06-07T14:00:00'},
+  ],
+};
+
+// ── Demo API stubs (simulan spGet/spPost/spPatch) ─────────────────
+const _demoStore = JSON.parse(JSON.stringify(DEMO_DATA));
+
+async function demoGet(listName) {
+  const map = {
+    'Usuarios_Portal': _demoStore.usuarios,
+    'Solicitudes':     _demoStore.solicitudes,
+    'Proveedores':     _demoStore.proveedores,
+    'Razones':         _demoStore.razones,
+    'Catalogo_Cats':   _demoStore.cats.map((n,i)=>({Id:i+1,Nombre:n,Title:n})),
+    'Catalogo_Areas':  _demoStore.areas.map((n,i)=>({Id:i+1,Nombre:n,Title:n})),
+    'Bitacora':        _demoStore.bitacora,
+  };
+  return map[listName] || [];
+}
+
+async function demoPost(listName, data) {
+  const newId = Date.now();
+  const item = {Id: newId, ...data};
+  const map = {
+    'Solicitudes':    _demoStore.solicitudes,
+    'Proveedores':    _demoStore.proveedores,
+    'Razones':        _demoStore.razones,
+    'Usuarios_Portal':_demoStore.usuarios,
+    'Bitacora':       _demoStore.bitacora,
+  };
+  if (map[listName]) map[listName].unshift(item);
+  return item;
+}
+
+async function demoPatch(listName, id, data) {
+  const map = {
+    'Solicitudes':    _demoStore.solicitudes,
+    'Proveedores':    _demoStore.proveedores,
+    'Razones':        _demoStore.razones,
+    'Usuarios_Portal':_demoStore.usuarios,
+  };
+  if (map[listName]) {
+    const idx = map[listName].findIndex(x => String(x.Id) === String(id));
+    if (idx >= 0) map[listName][idx] = {...map[listName][idx], ...data};
+  }
+}
+
+// ── Override API functions in DEMO_MODE ───────────────────────────
+async function spGet(listName, filter='', top=500) {
+  if (DEMO_MODE) return demoGet(listName);
+  // ... real Graph call below
+  const token = await getToken();
+  const siteId = await getSiteId();
+  const listId = await getListId(listName);
+  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top;
+  if (filter) url += '&$filter=' + filter;
+  const r = await fetch(url, {headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}});
+  if (!r.ok) { const e=await r.text(); console.error('spGet ERROR:', r.status, e); throw new Error('Error leyendo ' + listName + ' | ' + r.status); }
+  const d = await r.json();
+  return (d.value||[]).map(item => ({Id:item.id, ...item.fields}));
+}
+
+async function spPost(listName, data) {
+  if (DEMO_MODE) return demoPost(listName, data);
+  const token = await getToken();
+  const siteId = await getSiteId();
+  const listId = await getListId(listName);
+  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items';
+  const r = await fetch(url, {method:'POST', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}, body: JSON.stringify({fields: data})});
+  if (!r.ok) { const e=await r.text(); throw new Error('Error creando en ' + listName + ': ' + r.status); }
+  const d = await r.json();
+  return {Id: d.id, ...d.fields};
+}
+
+async function spPatch(listName, id, data) {
+  if (DEMO_MODE) { await demoPatch(listName, id, data); return; }
+  const token = await getToken();
+  const siteId = await getSiteId();
+  const listId = await getListId(listName);
+  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items/' + id + '/fields';
+  const r = await fetch(url, {method:'PATCH', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}, body: JSON.stringify(data)});
+  if (!r.ok) { const e=await r.text(); throw new Error('Error actualizando en ' + listName + ': ' + r.status); }
+}
+
+async function spDelete(listName, id) {
+  if (DEMO_MODE) { return; }
+  const token = await getToken();
+  const siteId = await getSiteId();
+  const listId = await getListId(listName);
+  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items/' + id;
+  await fetch(url, {method:'DELETE', headers:{'Authorization':'Bearer '+token}});
+}
+
 // ── CONFIG ────────────────────────────────────────────────────────
 const CONFIG = {
   clientId:    '4bb53ea7-e38d-4ef0-9c11-75ec5a759bde',
@@ -119,59 +255,13 @@ async function getListId(listName) {
   return _listIds[listName];
 }
 
-async function spGet(listName, filter='', top=500) {
-  const token = await getToken();
-  const siteId = await getSiteId();
-  const listId = await getListId(listName);
-  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top;
-  if (filter) url += '&$filter=' + filter;
-  console.log('spGet URL:', url);
-  const r = await fetch(url, {headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}});
-  if (!r.ok) {
-    const e = await r.text();
-    console.error('spGet ERROR:', r.status, e);
-    throw new Error('Error leyendo ' + listName + ' | ' + r.status);
-  }
-  const d = await r.json();
-  // Graph returns fields nested under item.fields
-  return (d.value||[]).map(item => ({Id:item.id, ...item.fields}));
-}
+// spGet defined above with DEMO_MODE support
 
-async function spPost(listName, data) {
-  const token = await getToken();
-  const siteId = await getSiteId();
-  const listId = await getListId(listName);
-  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items';
-  const r = await fetch(url, {
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body: JSON.stringify({fields: data})
-  });
-  if (!r.ok) { const e=await r.text(); console.error('spPost ERROR:', r.status, e); throw new Error('Error creando en ' + listName + ': ' + r.status); }
-  const d = await r.json();
-  return {Id: d.id, ...d.fields};
-}
+// spPost defined above with DEMO_MODE support
 
-async function spPatch(listName, id, data) {
-  const token = await getToken();
-  const siteId = await getSiteId();
-  const listId = await getListId(listName);
-  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items/' + id + '/fields';
-  const r = await fetch(url, {
-    method:'PATCH',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  });
-  if (!r.ok) { const e=await r.text(); console.error('spPatch ERROR:', r.status, e); throw new Error('Error actualizando en ' + listName + ': ' + r.status); }
-}
+// spPatch defined above with DEMO_MODE support
 
-async function spDelete(listName, id) {
-  const token = await getToken();
-  const siteId = await getSiteId();
-  const listId = await getListId(listName);
-  const url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items/' + id;
-  await fetch(url, {method:'DELETE', headers:{'Authorization':'Bearer '+token}});
-}
+// spDelete defined above with DEMO_MODE support
 
 // ── CONSTANTES ────────────────────────────────────────────────────
 const ROLES = ['Administrador','Finanzas','Contador','Solicitante'];
@@ -903,6 +993,10 @@ function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
       </div>
     </div>
     <div style={{padding:'28px 32px',maxWidth:1000,margin:'0 auto'}}>
+      {DEMO_MODE&&<div style={{background:'#FEF3E2',border:'1px solid #F59E0B',borderRadius:'var(--radius)',padding:'10px 16px',marginBottom:20,display:'flex',alignItems:'center',gap:10}}>
+        <span style={{fontSize:16}}>⚠️</span>
+        <span style={{fontSize:13,color:'#7A3F00',fontWeight:500}}>MODO DEMO — Los datos son ficticios. Desactiva DEMO_MODE antes de producción.</span>
+      </div>}
       <div style={{marginBottom:24}}>
         <div style={{fontSize:22,fontWeight:700,marginBottom:4}}>Bienvenido, {user.displayName?.split(' ')[0]}</div>
         <div style={{fontSize:13,color:'var(--text2)'}}>Selecciona un módulo para comenzar</div>
@@ -934,6 +1028,14 @@ function App(){
   function pop(msg,type){setToast({msg,err:type==='err'});setTimeout(()=>setToast(null),3500);}
 
   useEffect(()=>{
+    if(DEMO_MODE){
+      // Skip Microsoft login in demo mode
+      setUser(DEMO_USER);
+      setRolInfo({Rol:'Administrador', Correo:DEMO_USER.mail});
+      setPendientes(2);
+      setAuthState('app');
+      return;
+    }
     msalInstance.initialize().then(()=>{
       msalInstance.handleRedirectPromise().then(result=>{
         if(result&&result.account){
@@ -1015,7 +1117,7 @@ function App(){
   if(authState==='login') return <LoginScreen onLogin={login} loading={false} error={loginError}/>;
 
   return <div>
-    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{msalInstance.logoutRedirect();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
+    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{if(DEMO_MODE){setModulo(null);return;}msalInstance.logoutRedirect();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
     {modulo==='solicitudes'&&ROLES_MODS[rol]?.includes('solicitudes')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModSolicitudes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='aprobaciones'&&ROLES_MODS[rol]?.includes('aprobaciones')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModAprobaciones user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='finanzas'&&ROLES_MODS[rol]?.includes('finanzas')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModFinanzas user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
