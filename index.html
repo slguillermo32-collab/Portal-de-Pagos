@@ -72,8 +72,8 @@ async function getToken() {
     const r = await msalInstance.acquireTokenSilent({scopes:SCOPES, account:accounts[0]});
     return r.accessToken;
   } catch(e) {
-    const r = await msalInstance.acquireTokenPopup({scopes:SCOPES});
-    return r.accessToken;
+    await msalInstance.acquireTokenRedirect({scopes:SCOPES});
+    return null;
   }
 }
 
@@ -878,12 +878,16 @@ function App(){
 
   useEffect(()=>{
     msalInstance.initialize().then(()=>{
-      msalInstance.handleRedirectPromise().then(()=>{
-        const accounts=msalInstance.getAllAccounts();
-        if(accounts.length>0){
-          loadUser(accounts[0]);
+      msalInstance.handleRedirectPromise().then(result=>{
+        if(result&&result.account){
+          loadUser(result.account);
         } else {
-          setAuthState('login');
+          const accounts=msalInstance.getAllAccounts();
+          if(accounts.length>0){
+            loadUser(accounts[0]);
+          } else {
+            setAuthState('login');
+          }
         }
       }).catch(e=>{setAuthState('login');setLoginError(e.message);});
     });
@@ -928,8 +932,7 @@ function App(){
   async function login(){
     setLoginError('');
     try{
-      const r=await msalInstance.loginPopup({scopes:SCOPES});
-      await loadUser(r.account);
+      await msalInstance.loginRedirect({scopes:SCOPES});
     }catch(e){
       if(!e.message?.includes('user_cancelled')){
         setLoginError('Error al iniciar sesión: '+e.message);
@@ -955,7 +958,7 @@ function App(){
   if(authState==='login') return <LoginScreen onLogin={login} loading={false} error={loginError}/>;
 
   return <div>
-    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{msalInstance.logoutPopup();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
+    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{msalInstance.logoutRedirect();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
     {modulo==='solicitudes'&&ROLES_MODS[rol]?.includes('solicitudes')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModSolicitudes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='aprobaciones'&&ROLES_MODS[rol]?.includes('aprobaciones')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModAprobaciones user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='finanzas'&&ROLES_MODS[rol]?.includes('finanzas')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModFinanzas user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
