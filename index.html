@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portal de Pagos</title>
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#EBEEF3;color:#1A2332;-webkit-font-smoothing:antialiased;}
+:root{
+  --bg:#FFFFFF;--bg2:#F4F6F9;--bg3:#EBEEF3;
+  --border:#DDE2EB;--border2:#C4CDD8;
+  --text:#1A2332;--text2:#5A6B7E;--text3:#94A3B8;
+  --green:#0F8A65;--green-bg:#E6F4EF;--green-text:#0A5C43;
+  --blue:#1A56A4;--blue-bg:#EAF0FA;--blue-text:#0D3570;
+  --slate:#3D5A80;--slate-bg:#EEF2F7;
+  --purple:#6D3AB5;--purple-bg:#F0EAFA;--purple-text:#3D1F70;
+  --orange:#C06C0A;--orange-bg:#FEF3E2;--orange-text:#7A3F00;
+  --red:#C8251F;--red-bg:#FEF0EF;--red-text:#7A0F0B;
+  --radius:8px;--radius-lg:14px;
+  --shadow:0 1px 4px rgba(26,35,50,.08);
+  --shadow-lg:0 8px 28px rgba(26,35,50,.14);
+}
+input,select,textarea{font-family:inherit;}
+button{font-family:inherit;cursor:pointer;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
+.fade-in{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)!important;box-shadow:0 0 0 3px rgba(26,86,164,.12);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef}=React;
+
+// ── CONFIG ────────────────────────────────────────────────────────
+const CONFIG = {
+  clientId:    '4bb53ea7-e38d-4ef0-9c11-75ec5a759bde',
+  tenantId:    'e4a9245b-5b8b-4ddc-8797-ba10e2a5cb83',
+  siteUrl:     'https://fyttsa.sharepoint.com/sites/PortaldePagos',
+  sitePath:    '/sites/PortaldePagos',
+};
+
+// ── MSAL CONFIG ───────────────────────────────────────────────────
+const msalConfig = {
+  auth: {
+    clientId:    CONFIG.clientId,
+    authority:   'https://login.microsoftonline.com/' + CONFIG.tenantId,
+    redirectUri: window.location.href.split('?')[0],
+  },
+  cache: { cacheLocation:'sessionStorage', storeAuthStateInCookie:false, secureCookies:true }
+};
+
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+const SCOPES = [
+  'User.Read',
+  'https://fyttsa.sharepoint.com/AllSites.Write',
+];
+
+// ── SHAREPOINT API ────────────────────────────────────────────────
+async function getToken() {
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length === 0) throw new Error('No hay sesión');
+  try {
+    const r = await msalInstance.acquireTokenSilent({scopes:SCOPES, account:accounts[0]});
+    return r.accessToken;
+  } catch(e) {
+    const r = await msalInstance.acquireTokenPopup({scopes:SCOPES});
+    return r.accessToken;
+  }
+}
+
+async function spGet(list, filter='', top=500) {
+  const token = await getToken();
+  let url = `https://fyttsa.sharepoint.com/_api/web/lists/getbytitle('${list}')/items?$top=${top}`;
+  if (filter) url += '&$filter=' + filter;
+  const r = await fetch(url, {headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=nometadata'}});
+  if (!r.ok) throw new Error('Error leyendo ' + list);
+  const d = await r.json();
+  return d.value || [];
+}
+
+async function spPost(list, data) {
+  const token = await getToken();
+  const url = `https://fyttsa.sharepoint.com/_api/web/lists/getbytitle('${list}')/items`;
+  const r = await fetch(url, {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=nometadata','Content-Type':'application/json;odata=nometadata'},
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) { const e=await r.text(); throw new Error(e); }
+  return await r.json();
+}
+
+async function spPatch(list, id, data) {
+  const token = await getToken();
+  const url = `https://fyttsa.sharepoint.com/_api/web/lists/getbytitle('${list}')/items(${id})`;
+  const r = await fetch(url, {
+    method:'PATCH',
+    headers:{'Authorization':'Bearer '+token,'Accept':'application/json;odata=nometadata','Content-Type':'application/json;odata=nometadata','IF-MATCH':'*','X-HTTP-Method':'MERGE'},
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) { const e=await r.text(); throw new Error(e); }
+}
+
+async function spDelete(list, id) {
+  const token = await getToken();
+  const url = `https://fyttsa.sharepoint.com/_api/web/lists/getbytitle('${list}')/items(${id})`;
+  await fetch(url, {method:'DELETE', headers:{'Authorization':'Bearer '+token,'IF-MATCH':'*'}});
+}
+
+// ── CONSTANTES ────────────────────────────────────────────────────
+const ROLES = ['Administrador','Finanzas','Contador','Solicitante'];
+const ROLES_MODS = {
+  Administrador: ['solicitudes','aprobaciones','contabilidad','finanzas','catalogos','usuarios','bitacora'],
+  Finanzas:      ['solicitudes','aprobaciones','finanzas','catalogos'],
+  Contador:      ['solicitudes','contabilidad','catalogos'],
+  Solicitante:   ['solicitudes'],
+};
+const STATUS_OPTS = ['Capturado','En revisión contable','Rechazado por contabilidad','Autorizado por contabilidad','En revisión financiera','Programado','Pagado','Cancelado','Rechazado'];
+const METS  = ['Transferencia','Tarjeta empresarial','Efectivo','Cheque'];
+const PRIOS = ['Alta','Media','Baja'];
+const ST_COL = {
+  'Capturado':{bg:'#FEF3E2',c:'#7A3F00'},
+  'En revisión contable':{bg:'#EAF0FA',c:'#0D3570'},
+  'Rechazado por contabilidad':{bg:'#FEF0EF',c:'#7A0F0B'},
+  'Autorizado por contabilidad':{bg:'#E6F4EF',c:'#0A5C43'},
+  'En revisión financiera':{bg:'#F0EAFA',c:'#3D1F70'},
+  'Programado':{bg:'#EEF2F7',c:'#1E3555'},
+  'Pagado':{bg:'#D1FAE5',c:'#065F46'},
+  'Cancelado':{bg:'#F3F4F6',c:'#6B7280'},
+  'Rechazado':{bg:'#FEF0EF',c:'#7A0F0B'},
+};
+const PR_COL = {Alta:{bg:'#FEF0EF',c:'#7A0F0B'},Media:{bg:'#FEF3E2',c:'#7A3F00'},Baja:{bg:'#E6F4EF',c:'#0A5C43'}};
+
+const fmt   = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0);
+const fmtD  = d => d ? new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const today = () => new Date().toISOString().split('T')[0];
+
+function genFolio(list) {
+  const yr = new Date().getFullYear();
+  const n  = (list||[]).length + 1;
+  return 'SOL-' + yr + '-' + String(n).padStart(4,'0');
+}
+
+// ── ESTILOS ───────────────────────────────────────────────────────
+const S = {
+  card:{background:'var(--bg)',borderRadius:'var(--radius-lg)',border:'1px solid var(--border)',padding:'20px 24px',marginBottom:14,boxShadow:'var(--shadow)'},
+  inp:{width:'100%',padding:'9px 12px',border:'1px solid var(--border2)',borderRadius:'var(--radius)',fontSize:13,background:'var(--bg)',color:'var(--text)'},
+  sel:{width:'100%',padding:'9px 12px',border:'1px solid var(--border2)',borderRadius:'var(--radius)',fontSize:13,background:'var(--bg)',color:'var(--text)',cursor:'pointer'},
+  btnP:{background:'var(--green)',color:'white',padding:'9px 20px',borderRadius:'var(--radius)',border:'none',fontSize:13,fontWeight:600},
+  btnS:{background:'var(--bg2)',color:'var(--text2)',padding:'9px 16px',borderRadius:'var(--radius)',border:'1px solid var(--border)',fontSize:13},
+  btnR:{background:'var(--red-bg)',color:'var(--red-text)',padding:'9px 16px',borderRadius:'var(--radius)',border:'1px solid #FCA5A5',fontSize:13},
+  lbl:{display:'block',fontSize:10,fontWeight:700,color:'var(--text3)',marginBottom:5,textTransform:'uppercase',letterSpacing:'.06em'},
+  th:{padding:'9px 14px',textAlign:'left',fontSize:10,fontWeight:700,color:'var(--slate)',textTransform:'uppercase',letterSpacing:'.07em',background:'var(--bg2)',borderBottom:'1px solid var(--border)'},
+  td:{padding:'11px 14px',borderBottom:'1px solid var(--border)',fontSize:13,verticalAlign:'middle'},
+  mono:{fontFamily:'monospace',fontSize:12},
+  h1:{fontSize:21,fontWeight:700,marginBottom:4,letterSpacing:'-.025em'},
+  h2:{fontSize:10,fontWeight:700,color:'var(--slate)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10},
+};
+
+// ── COMPONENTES UI ────────────────────────────────────────────────
+function Badge({val,map}){
+  const col=(map&&map[val])||{bg:'#eee',c:'#555'};
+  return <span style={{display:'inline-block',padding:'2px 9px',borderRadius:20,fontSize:11,fontWeight:500,background:col.bg,color:col.c,whiteSpace:'nowrap'}}>{val||'—'}</span>;
+}
+function Lbl({children,req}){return <label style={S.lbl}>{children}{req&&<span style={{color:'var(--red)'}}> *</span>}</label>;}
+function Fld({label,req,span2,children}){return <div style={{gridColumn:span2?'span 2':'span 1'}}><Lbl req={req}>{label}</Lbl>{children}</div>;}
+function Toast({t}){if(!t)return null;return <div style={{position:'fixed',bottom:20,right:20,background:t.err?'var(--red)':'var(--green)',color:'white',padding:'10px 18px',borderRadius:'var(--radius)',fontSize:13,fontWeight:500,zIndex:9999,boxShadow:'var(--shadow-lg)'}}>{t.msg}</div>;}
+function Modal({children,onClose,maxW=500}){return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:20}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}><div style={{background:'var(--bg)',borderRadius:16,padding:24,width:'100%',maxWidth:maxW,boxShadow:'var(--shadow-lg)',maxHeight:'90vh',overflowY:'auto'}} className="fade-in">{children}</div></div>;}
+function KV({label,val,mono}){return <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--border)'}}><span style={{fontSize:12,color:'var(--text2)'}}>{label}</span><span style={{fontSize:13,fontWeight:500,fontFamily:mono?'monospace':undefined}}>{val||'—'}</span></div>;}
+
+// ── LOADING / LOGIN ───────────────────────────────────────────────
+function LoginScreen({onLogin,loading,error}){
+  return <div style={{minHeight:'100vh',background:'linear-gradient(135deg,#0F8A65 0%,#0A6E50 40%,#1A56A4 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+    <div style={{background:'var(--bg)',borderRadius:20,padding:'40px 36px',width:'100%',maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,.2)',textAlign:'center'}}>
+      <div style={{width:64,height:64,borderRadius:16,background:'var(--green-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 16px'}}>🏗️</div>
+      <div style={{fontSize:22,fontWeight:700,marginBottom:6}}>Portal de Pagos</div>
+      <div style={{fontSize:13,color:'var(--text2)',marginBottom:28}}>Inicia sesión con tu cuenta corporativa</div>
+      {error&&<div style={{padding:'10px 14px',background:'var(--red-bg)',color:'var(--red-text)',borderRadius:'var(--radius)',fontSize:13,marginBottom:16,border:'1px solid #FCA5A5'}}>{error}</div>}
+      <button onClick={onLogin} disabled={loading} style={{...S.btnP,width:'100%',padding:'12px',fontSize:14,opacity:loading?0.7:1,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+        {loading?'Iniciando sesión…':<><svg width="20" height="20" viewBox="0 0 20 20"><rect width="9" height="9" fill="#F25022"/><rect x="11" width="9" height="9" fill="#7FBA00"/><rect y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>Entrar con Microsoft</>}
+      </button>
+      <div style={{marginTop:16,fontSize:11,color:'var(--text3)'}}>Solo usuarios con correo corporativo @fyttsa.com</div>
+    </div>
+  </div>;
+}
+
+
+// ── BITÁCORA ──────────────────────────────────────────────────────
+async function logBitacora(usuario, accion, detalle, modulo) {
+  try {
+    await spPost('Bitacora', {
+      Title: accion,
+      Usuario: usuario,
+      Accion: accion,
+      Detalle: detalle,
+      Modulo: modulo || '',
+      Fecha: new Date().toISOString(),
+    });
+  } catch(e) {
+    console.warn('Bitacora error:', e.message);
+  }
+}
+
+// ── MÓDULO SOLICITUDES ────────────────────────────────────────────
+function ModSolicitudes({user,rol,onBack,pop}){
+  const [sols,setSols]=useState([]);
+  const [provs,setProvs]=useState([]);
+  const [razones,setRazones]=useState([]);
+  const [cats,setCats]=useState([]);
+  const [areas,setAreas]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [vista,setVista]=useState('lista');
+  const [sel,setSel]=useState(null);
+  const [form,setForm]=useState(null);
+  const [saving,setSaving]=useState(false);
+
+  const FORM0={
+    Folio:'',Proveedor:'',RFC_Proveedor:'',Razon_Social:'',Area:'',Categoria:'',
+    Centro_Costo:'',Factura:'',Importe:'',Subtotal:'',IVA:'',Monto_Pagar:'',
+    Es_Parcial:false,Tipo_Documento:'Factura',Tipo_Pago:'Contado',
+    Metodo_Pago:'Transferencia',Prioridad:'Media',Fecha_Requerida:'',
+    Status:'Capturado',Notas:'',Es_Anticipo:false,
+    Solicitante:user.displayName||user.mail,
+  };
+
+  useEffect(()=>{
+    Promise.all([
+      spGet('Solicitudes','',1000),
+      spGet('Proveedores'),
+      spGet('Razones'),
+      spGet('Catalogo_Cats'),
+      spGet('Catalogo_Areas'),
+    ]).then(([s,p,r,c,a])=>{
+      setSols(s); setProvs(p); setRazones(r);
+      setCats(c.map(x=>x.Nombre||x.Title));
+      setAreas(a.map(x=>x.Nombre||x.Title));
+      setLoading(false);
+    }).catch(e=>{pop('Error cargando datos: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  async function guardar(){
+    if(!form.Proveedor||!form.Area||!form.Categoria||!form.Importe){pop('Completa los campos obligatorios','err');return;}
+    setSaving(true);
+    try{
+      const folio=form.Folio||genFolio(sols);
+      const data={...form,Folio:folio,Title:folio};
+      if(sel){
+        await spPatch('Solicitudes',sel.Id||sel.id,data);
+        setSols(prev=>prev.map(x=>(x.Id||x.id)===(sel.Id||sel.id)?{...x,...data}:x));
+        logBitacora(user.displayName,'Editó solicitud',(sel.Folio||sel.Title)+' · '+form.Proveedor,'Solicitudes');
+        pop('✓ Solicitud actualizada');
+      } else {
+        const created=await spPost('Solicitudes',data);
+        setSols(prev=>[created,...prev]);
+        logBitacora(user.displayName,'Creó solicitud',folio+' · '+form.Proveedor+' · '+fmt(form.Importe),'Solicitudes');
+        pop('✓ '+folio+' enviada correctamente');
+      }
+      setVista('lista');setForm(null);setSel(null);
+    }catch(e){pop('Error al guardar: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  const sf=p=>setForm(prev=>({...prev,...p}));
+  const puedeEditar=x=>rol==='Administrador'||x.Status==='Capturado';
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando solicitudes…</div>;
+
+  if(vista==='form') return <div style={{maxWidth:820}} className="fade-in">
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+      <button style={S.btnS} onClick={()=>{setVista('lista');setForm(null);setSel(null);}}>← Volver</button>
+      <div>
+        <div style={S.h1}>{sel?'Editar '+sel.Folio:'Nueva solicitud de pago'}</div>
+        <div style={{fontSize:12,color:'var(--text2)'}}>Solicitante: {user.displayName}</div>
+      </div>
+    </div>
+
+    <div style={S.card}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        <Fld label="Proveedor" req>
+          <select style={S.sel} value={form.Proveedor} onChange={e=>sf({Proveedor:e.target.value})}>
+            <option value="">— Selecciona o escribe —</option>
+            {provs.map(p=><option key={p.Id} value={p.Title||p.Nombre}>{p.Title||p.Nombre}{p.RFC?' · '+p.RFC:''}</option>)}
+          </select>
+          <input style={{...S.inp,marginTop:5,fontSize:12}} placeholder="O escribe el nombre del proveedor" value={form.Proveedor} onChange={e=>sf({Proveedor:e.target.value})}/>
+        </Fld>
+
+        <Fld label="RFC del proveedor">
+          <input style={S.inp} placeholder="RFC" value={form.RFC_Proveedor} onChange={e=>sf({RFC_Proveedor:e.target.value.toUpperCase()})}/>
+        </Fld>
+
+        <Fld label="Razón social (receptor)">
+          <select style={S.sel} value={form.Razon_Social} onChange={e=>sf({Razon_Social:e.target.value})}>
+            <option value="">— Selecciona —</option>
+            {razones.map(r=><option key={r.Id} value={r.Title||r.Nombre}>{r.Title||r.Nombre}</option>)}
+          </select>
+          <input style={{...S.inp,marginTop:5,fontSize:12}} placeholder="O escribe la razón social" value={form.Razon_Social} onChange={e=>sf({Razon_Social:e.target.value})}/>
+        </Fld>
+
+        <Fld label="Área" req>
+          <select style={S.sel} value={form.Area} onChange={e=>sf({Area:e.target.value})}>
+            <option value="">— Selecciona —</option>
+            {areas.map((a,i)=><option key={i} value={a}>{a}</option>)}
+          </select>
+        </Fld>
+
+        <Fld label="Categoría" req>
+          <select style={S.sel} value={form.Categoria} onChange={e=>sf({Categoria:e.target.value})}>
+            <option value="">— Selecciona —</option>
+            {cats.map((c,i)=><option key={i} value={c}>{c}</option>)}
+          </select>
+        </Fld>
+
+        <Fld label="Centro de costo / Proyecto">
+          <input style={S.inp} placeholder="Ej. Obra Torre Norte, Admin 2025…" value={form.Centro_Costo} onChange={e=>sf({Centro_Costo:e.target.value})}/>
+        </Fld>
+
+        <Fld label="No. Factura / UUID">
+          <input style={S.inp} placeholder="UUID o folio de factura" value={form.Factura} onChange={e=>sf({Factura:e.target.value})}/>
+        </Fld>
+
+        <Fld label="Tipo de documento">
+          <select style={S.sel} value={form.Tipo_Documento} onChange={e=>sf({Tipo_Documento:e.target.value})}>
+            <option>Factura</option><option>Cotización</option><option>Otro</option>
+          </select>
+        </Fld>
+
+        <Fld label="Importe total (MXN)" req>
+          <input style={S.inp} type="number" min="0" step="0.01" placeholder="0.00" value={form.Importe} onChange={e=>sf({Importe:e.target.value})}/>
+        </Fld>
+
+        <Fld label="Fecha requerida de pago">
+          <input style={S.inp} type="date" value={form.Fecha_Requerida} onChange={e=>sf({Fecha_Requerida:e.target.value})}/>
+        </Fld>
+
+        <Fld label="Método de pago">
+          <select style={S.sel} value={form.Metodo_Pago} onChange={e=>sf({Metodo_Pago:e.target.value})}>
+            {METS.map(m=><option key={m}>{m}</option>)}
+          </select>
+        </Fld>
+
+        <Fld label="Prioridad">
+          <select style={S.sel} value={form.Prioridad} onChange={e=>sf({Prioridad:e.target.value})}>
+            {PRIOS.map(p=><option key={p}>{p}</option>)}
+          </select>
+        </Fld>
+
+        <Fld label="Notas adicionales" span2>
+          <textarea style={{...S.inp,minHeight:60,resize:'vertical'}} placeholder="Instrucciones, observaciones…" value={form.Notas} onChange={e=>sf({Notas:e.target.value})}/>
+        </Fld>
+      </div>
+    </div>
+
+    <div style={{display:'flex',justifyContent:'flex-end',gap:10}}>
+      <button style={S.btnS} onClick={()=>setForm(FORM0)}>Limpiar</button>
+      <button style={S.btnP} onClick={guardar} disabled={saving}>{saving?'Guardando…':'Enviar solicitud →'}</button>
+    </div>
+  </div>;
+
+  if(vista==='detalle'&&sel) return <div style={{maxWidth:780}} className="fade-in">
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20,flexWrap:'wrap'}}>
+      <button style={S.btnS} onClick={()=>{setVista('lista');setSel(null);}}>← Volver</button>
+      <div>
+        <div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio}</div>
+        <div style={S.h1}>{sel.Proveedor||'Sin proveedor'}</div>
+      </div>
+      <div style={{marginLeft:'auto',display:'flex',gap:8,alignItems:'center'}}>
+        <Badge val={sel.Prioridad||'Media'} map={PR_COL}/>
+        <Badge val={sel.Status} map={ST_COL}/>
+        {puedeEditar(sel)&&<button onClick={()=>{setForm({...FORM0,...sel});setVista('form');}} style={{...S.btnS,fontSize:12,padding:'5px 12px'}}>✏️ Editar</button>}
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <div style={S.card}>
+        <div style={S.h2}>Datos del pago</div>
+        <KV label="Proveedor" val={sel.Proveedor}/>
+        <KV label="RFC" val={sel.RFC_Proveedor} mono/>
+        <KV label="Razón social" val={sel.Razon_Social}/>
+        <KV label="Área" val={sel.Area}/>
+        <KV label="Categoría" val={sel.Categoria}/>
+        {sel.Centro_Costo&&<KV label="Centro / Proyecto" val={sel.Centro_Costo}/>}
+        <KV label="No. Factura" val={sel.Factura} mono/>
+        <KV label="Tipo documento" val={sel.Tipo_Documento}/>
+        <KV label="Método de pago" val={sel.Metodo_Pago}/>
+        <KV label="Fecha requerida" val={fmtD(sel.Fecha_Requerida)}/>
+        {sel.Notas&&<div style={{marginTop:10,padding:'10px 12px',background:'#FFFBEB',borderRadius:'var(--radius)',fontSize:12,lineHeight:1.7,borderLeft:'2px solid #F59E0B'}}>{sel.Notas}</div>}
+      </div>
+      <div style={S.card}>
+        <div style={S.h2}>Importes</div>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+          <span style={{fontSize:13,color:'var(--text2)'}}>Importe total</span>
+          <span style={{fontSize:22,fontWeight:700,fontFamily:'monospace',color:'var(--green)'}}>{fmt(sel.Importe)}</span>
+        </div>
+        {sel.Subtotal>0&&<KV label="Subtotal" val={fmt(sel.Subtotal)} mono/>}
+        {sel.IVA>0&&<KV label="IVA" val={fmt(sel.IVA)} mono/>}
+        {sel.Monto_Pagar>0&&<div style={{padding:'10px 12px',background:'var(--purple-bg)',borderRadius:'var(--radius)',border:'1px solid #D4AAEF',marginTop:10}}>
+          <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontSize:12,color:'var(--purple-text)'}}>Monto a pagar</span><span style={{fontSize:16,fontWeight:700,fontFamily:'monospace',color:'var(--purple)'}}>{fmt(sel.Monto_Pagar)}</span></div>
+        </div>}
+        {sel.Fecha_Programada&&<div style={{marginTop:10,padding:'8px 12px',background:'var(--blue-bg)',borderRadius:'var(--radius)'}}><div style={{fontSize:11,color:'var(--blue)',fontWeight:600,marginBottom:2}}>FECHA PROGRAMADA</div><div style={{fontSize:14,fontWeight:600,color:'var(--blue)'}}>{fmtD(sel.Fecha_Programada)}</div></div>}
+        {sel.Solicitante&&<div style={{marginTop:10,fontSize:12,color:'var(--text2)'}}>Solicitado por: <strong>{sel.Solicitante}</strong></div>}
+      </div>
+    </div>
+  </div>;
+
+  return <div>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
+      <div>
+        <div style={S.h1}>Solicitudes de pago</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>{sols.length} solicitudes registradas</div>
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button style={S.btnS} onClick={onBack}>← Portal</button>
+        <button style={S.btnP} onClick={()=>{setForm({...FORM0});setSel(null);setVista('form');}}>+ Nueva solicitud</button>
+      </div>
+    </div>
+
+    {sols.length===0
+      ?<div style={{...S.card,textAlign:'center',padding:60}}>
+        <div style={{fontSize:40,marginBottom:12}}>📋</div>
+        <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>Sin solicitudes aún</div>
+        <button style={S.btnP} onClick={()=>{setForm({...FORM0});setVista('form');}}>+ Nueva solicitud</button>
+      </div>
+      :<div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Folio','Proveedor','Categoría','Importe','Prior.','Status','Fecha req.'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{sols.map(x=><tr key={x.Id||x.id} onClick={()=>{setSel(x);setVista('detalle');}} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
+            <td style={S.td}><div style={{fontWeight:500}}>{x.Proveedor||'—'}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
+            <td style={S.td}><div style={{fontSize:12}}>{x.Categoria}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Area}</div></td>
+            <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
+            <td style={S.td}><Badge val={x.Prioridad||'Media'} map={PR_COL}/></td>
+            <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
+            <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    }
+  </div>;
+}
+
+// ── MÓDULO APROBACIONES ───────────────────────────────────────────
+function ModAprobaciones({user,rol,onBack,pop}){
+  const [sols,setSols]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [sel,setSel]=useState(null);
+  const [nota,setNota]=useState('');
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{
+    spGet('Solicitudes','',1000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const porAprobar=sols.filter(x=>x.Status==='Capturado');
+  const enRevision=sols.filter(x=>x.Status==='En revisión contable'||x.Status==='Autorizado por contabilidad');
+
+  async function aprobar(ok){
+    if(!ok&&!nota.trim()){pop('Escribe el motivo del rechazo','err');return;}
+    setSaving(true);
+    const LIMITE_2A=20000;
+    let nextStatus;
+    if(!ok) nextStatus='Rechazado';
+    else if(sel.Importe>=LIMITE_2A&&sel.Status==='Capturado') nextStatus='En revisión contable';
+    else nextStatus='En revisión contable';
+    try{
+      await spPatch('Solicitudes',sel.Id,{Status:nextStatus,Notas_Finanzas:(nota||'')});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:nextStatus}:x));
+      logBitacora(user.displayName,ok?'Aprobó solicitud':'Rechazó solicitud',(sel.Folio||sel.Title)+' · '+sel.Proveedor+' · '+nextStatus,'Aprobaciones');
+      setSel(null);setNota('');
+      pop(ok?'✓ Aprobada':'Rechazada');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando…</div>;
+
+  if(sel) return <div style={{maxWidth:780}} className="fade-in">
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+      <button style={S.btnS} onClick={()=>{setSel(null);setNota('');}}>← Volver</button>
+      <div><div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio}</div><div style={S.h1}>{sel.Proveedor}</div></div>
+      <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <div style={S.card}>
+        <div style={S.h2}>Detalle de la solicitud</div>
+        <KV label="Proveedor" val={sel.Proveedor}/>
+        <KV label="Área · Categoría" val={sel.Area+' · '+sel.Categoria}/>
+        <KV label="No. Factura" val={sel.Factura} mono/>
+        <KV label="Método" val={sel.Metodo_Pago}/>
+        <KV label="Solicitante" val={sel.Solicitante}/>
+        {sel.Notas&&<div style={{marginTop:10,padding:'8px 10px',background:'#FFFBEB',borderRadius:'var(--radius)',fontSize:12,lineHeight:1.6,borderLeft:'2px solid #F59E0B'}}>{sel.Notas}</div>}
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:12}}>
+          <span style={{fontSize:13,color:'var(--text2)'}}>Importe</span>
+          <span style={{fontSize:22,fontWeight:700,fontFamily:'monospace',color:'var(--green)'}}>{fmt(sel.Importe)}</span>
+        </div>
+      </div>
+      <div style={S.card}>
+        <div style={S.h2}>Tu decisión</div>
+        <div style={{padding:'10px 12px',background:'var(--orange-bg)',borderRadius:'var(--radius)',fontSize:12,color:'var(--orange-text)',marginBottom:14,lineHeight:1.7}}>Al aprobar confirmas que el gasto es necesario y el monto es correcto.</div>
+        <label style={S.lbl}>Notas {!sel.aprobacion&&'(obligatorio si rechazas)'}</label>
+        <textarea style={{...S.inp,minHeight:80,resize:'vertical',marginBottom:14}} value={nota} onChange={e=>setNota(e.target.value)} placeholder="Motivo, instrucciones…"/>
+        <div style={{display:'flex',gap:10}}>
+          <button style={{...S.btnR,flex:1}} onClick={()=>aprobar(false)} disabled={saving}>✕ Rechazar</button>
+          <button style={{...S.btnP,flex:1}} onClick={()=>aprobar(true)} disabled={saving}>✓ Aprobar →</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+
+  return <div>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+      <div><div style={S.h1}>Aprobaciones</div><div style={{fontSize:13,color:'var(--text2)'}}>{porAprobar.length} pendientes de aprobar</div></div>
+      <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+    {porAprobar.length===0
+      ?<div style={{...S.card,textAlign:'center',padding:40,color:'var(--text3)'}}><div style={{fontSize:28,marginBottom:8}}>✅</div>Sin solicitudes pendientes</div>
+      :<div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Folio','Proveedor','Importe','Prior.','Solicitante'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{porAprobar.map(x=><tr key={x.Id} onClick={()=>{setSel(x);setNota('');}} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
+            <td style={S.td}><div style={{fontWeight:500}}>{x.Proveedor}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
+            <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
+            <td style={S.td}><Badge val={x.Prioridad||'Media'} map={PR_COL}/></td>
+            <td style={{...S.td,fontSize:12}}>{x.Solicitante}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    }
+  </div>;
+}
+
+// ── MÓDULO FINANZAS (básico) ──────────────────────────────────────
+function ModFinanzas({user,rol,onBack,pop}){
+  const [sols,setSols]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [sel,setSel]=useState(null);
+  const [fSt,setFSt]=useState('');
+  const [fFP,setFFP]=useState('');
+  const [fNt,setFNt]=useState('');
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{
+    spGet('Solicitudes','',1000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const porPagar=sols.filter(x=>['Autorizado por contabilidad','En revisión financiera','Programado'].includes(x.Status));
+  const pagados=sols.filter(x=>x.Status==='Pagado');
+
+  function openSol(x){setSel(x);setFSt(x.Status);setFFP(x.Fecha_Programada||'');setFNt(x.Notas_Finanzas||'');}
+
+  async function guardar(){
+    setSaving(true);
+    try{
+      await spPatch('Solicitudes',sel.Id,{Status:fSt,Fecha_Programada:fFP||null,Notas_Finanzas:fNt});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:fSt,Fecha_Programada:fFP,Notas_Finanzas:fNt}:x));
+      logBitacora(user.displayName,'Actualizó pago',(sel.Folio||sel.Title)+' → '+fSt+(fFP?' · Prog: '+fFP:''),'Finanzas');
+      setSel(null);pop('✓ Guardado');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando…</div>;
+
+  const kpis={
+    porPagar:{t:porPagar.reduce((a,x)=>a+(x.Importe||0),0),n:porPagar.length},
+    pagado:{t:pagados.reduce((a,x)=>a+(x.Importe||0),0),n:pagados.length},
+  };
+
+  if(sel) return <div style={{maxWidth:780}} className="fade-in">
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+      <button style={S.btnS} onClick={()=>setSel(null)}>← Volver</button>
+      <div><div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio}</div><div style={S.h1}>{sel.Proveedor}</div></div>
+      <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <div style={S.card}>
+        <div style={S.h2}>Datos</div>
+        <KV label="Proveedor" val={sel.Proveedor}/>
+        <KV label="Categoría" val={sel.Categoria}/>
+        <KV label="Método" val={sel.Metodo_Pago}/>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:12}}><span style={{fontSize:13,color:'var(--text2)'}}>A pagar</span><span style={{fontSize:22,fontWeight:700,fontFamily:'monospace',color:'var(--green)'}}>{fmt(sel.Importe)}</span></div>
+      </div>
+      <div style={S.card}>
+        <div style={S.h2}>Gestión del pago</div>
+        <div style={{display:'grid',gap:12}}>
+          <div><label style={S.lbl}>Status</label>
+            <select style={S.sel} value={fSt} onChange={e=>setFSt(e.target.value)}>
+              {['En revisión financiera','Programado','Pagado','Cancelado'].map(s=><option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div><label style={S.lbl}>Fecha programada de pago</label><input type="date" style={S.inp} value={fFP} onChange={e=>setFFP(e.target.value)}/></div>
+          <div><label style={S.lbl}>Notas de finanzas</label><textarea style={{...S.inp,minHeight:60,resize:'vertical'}} value={fNt} onChange={e=>setFNt(e.target.value)} placeholder="Instrucciones, referencia…"/></div>
+          <button style={S.btnP} onClick={guardar} disabled={saving}>{saving?'Guardando…':'Guardar →'}</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+
+  return <div>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+      <div><div style={S.h1}>Finanzas</div><div style={{fontSize:13,color:'var(--text2)'}}>{porPagar.length} por programar o pagar</div></div>
+      <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+      {[{l:'Por pagar',k:kpis.porPagar,bg:'var(--orange-bg)',c:'var(--orange-text)'},{l:'Pagado total',k:kpis.pagado,bg:'var(--green-bg)',c:'var(--green-text)'}].map(kp=><div key={kp.l} style={{background:kp.bg,borderRadius:'var(--radius-lg)',padding:'14px 16px'}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:kp.c,marginBottom:4,opacity:.8}}>{kp.l}</div>
+        <div style={{fontSize:20,fontWeight:700,color:kp.c,fontFamily:'monospace'}}>{fmt(kp.k.t)}</div>
+        <div style={{fontSize:12,color:kp.c,opacity:.7}}>{kp.k.n} solicitudes</div>
+      </div>)}
+    </div>
+    {porPagar.length===0
+      ?<div style={{...S.card,textAlign:'center',padding:40,color:'var(--text3)'}}><div style={{fontSize:28,marginBottom:8}}>💼</div>Sin pagos pendientes</div>
+      :<div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Folio','Proveedor','Importe','Método','Status','Fecha prog.'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{porPagar.map(x=><tr key={x.Id} onClick={()=>openSol(x)} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
+            <td style={S.td}><div style={{fontWeight:500}}>{x.Proveedor}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
+            <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
+            <td style={S.td}><Badge val={x.Metodo_Pago||'Transferencia'} /></td>
+            <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
+            <td style={{...S.td,fontSize:12,color:'var(--blue)'}}>{fmtD(x.Fecha_Programada)}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    }
+  </div>;
+}
+
+// ── MÓDULO USUARIOS ───────────────────────────────────────────────
+function ModUsuarios({user,onBack,pop}){
+  const [users,setUsers]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [form,setForm]=useState(null);
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{
+    spGet('Usuarios_Portal').then(u=>{setUsers(u);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const FORM0={Title:'',Correo:'',Rol:'Solicitante',Activo:true,Razones:''};
+  const sf=p=>setForm(prev=>({...prev,...p}));
+
+  async function guardar(){
+    if(!form.Correo||!form.Rol){pop('Correo y rol son requeridos','err');return;}
+    setSaving(true);
+    try{
+      const data={Title:form.Correo,Correo:form.Correo,Rol:form.Rol,Activo:form.Activo,Razones:form.Razones||''};
+      if(form.Id){
+        await spPatch('Usuarios_Portal',form.Id,data);
+        setUsers(prev=>prev.map(x=>x.Id===form.Id?{...x,...data}:x));
+      } else {
+        const created=await spPost('Usuarios_Portal',data);
+        setUsers(prev=>[...prev,created]);
+      }
+      logBitacora(user.displayName,form.Id?'Editó usuario':'Creó usuario',form.Correo+' · Rol: '+form.Rol,'Usuarios');
+      setForm(null);pop('✓ Usuario guardado');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando…</div>;
+
+  return <div>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+      <div><div style={S.h1}>Gestión de usuarios</div><div style={{fontSize:13,color:'var(--text2)'}}>{users.length} usuarios registrados</div></div>
+      <div style={{display:'flex',gap:8}}>
+        <button style={S.btnS} onClick={onBack}>← Portal</button>
+        <button style={S.btnP} onClick={()=>setForm({...FORM0})}>+ Nuevo usuario</button>
+      </div>
+    </div>
+
+    <div style={{...S.card,background:'var(--blue-bg)',borderColor:'#93C5FD',marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:600,color:'var(--blue)',marginBottom:6}}>¿Cómo funciona el acceso?</div>
+      <div style={{fontSize:12,color:'var(--blue-text)',lineHeight:1.8}}>
+        El login es automático con la cuenta de Microsoft. Aquí defines qué rol tiene cada persona dentro del portal. Solo usuarios registrados aquí pueden acceder.
+      </div>
+    </div>
+
+    <div style={{...S.card,padding:0,overflow:'hidden'}}>
+      <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <thead><tr>{['Correo','Rol','Acceso','Status',''].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+        <tbody>
+          {users.length===0&&<tr><td colSpan={5} style={{...S.td,textAlign:'center',padding:32,color:'var(--text3)'}}>Sin usuarios registrados</td></tr>}
+          {users.map(u=><tr key={u.Id} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={S.td}><div style={{fontWeight:500}}>{u.Correo||u.Title}</div></td>
+            <td style={S.td}><span style={{fontSize:11,padding:'2px 8px',borderRadius:20,fontWeight:500,...(u.Rol==='Administrador'?{background:'var(--purple-bg)',color:'var(--purple)'}:{background:'var(--blue-bg)',color:'var(--blue)'})}}>{u.Rol}</span></td>
+            <td style={S.td}><span style={{fontSize:12,color:'var(--text2)'}}>{ROLES_MODS[u.Rol]?.join(', ')||'—'}</span></td>
+            <td style={S.td}><span style={{fontSize:11,padding:'2px 8px',borderRadius:20,...(u.Activo!==false?{background:'var(--green-bg)',color:'var(--green-text)'}:{background:'var(--red-bg)',color:'var(--red-text)'})}}>{u.Activo!==false?'Activo':'Inactivo'}</span></td>
+            <td style={{...S.td,whiteSpace:'nowrap'}}>
+              <button onClick={()=>setForm({...FORM0,...u})} style={{...S.btnS,fontSize:11,padding:'4px 10px'}}>✏️ Editar</button>
+            </td>
+          </tr>)}
+        </tbody>
+      </table>
+    </div>
+
+    {form&&<Modal onClose={()=>setForm(null)}>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:16}}>{form.Id?'Editar usuario':'Nuevo usuario'}</div>
+      <div style={{display:'grid',gap:12}}>
+        <div><Lbl req>Correo institucional</Lbl><input style={S.inp} type="email" placeholder="usuario@fyttsa.com" value={form.Correo} onChange={e=>sf({Correo:e.target.value})}/></div>
+        <div><Lbl req>Rol</Lbl>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginTop:4}}>
+            {ROLES.map(r=><div key={r} onClick={()=>sf({Rol:r})} style={{padding:'10px 12px',borderRadius:'var(--radius)',border:'1px solid '+(form.Rol===r?'var(--green)':'var(--border)'),background:form.Rol===r?'var(--green-bg)':'var(--bg2)',cursor:'pointer'}}>
+              <div style={{fontWeight:600,fontSize:13,color:form.Rol===r?'var(--green)':'var(--text)'}}>{r}</div>
+              <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>{ROLES_MODS[r]?.join(' · ')}</div>
+            </div>)}
+          </div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:'var(--radius)',background:form.Activo?'var(--green-bg)':'var(--bg2)',border:'1px solid '+(form.Activo?'var(--green)':'var(--border)'),cursor:'pointer'}} onClick={()=>sf({Activo:!form.Activo})}>
+          <div style={{width:18,height:18,borderRadius:4,border:'1.5px solid '+(form.Activo?'var(--green)':'var(--border2)'),background:form.Activo?'var(--green)':'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {form.Activo&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+          <span style={{fontSize:13}}>Usuario activo (puede iniciar sesión)</span>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:4}}>
+          <button style={{...S.btnS,flex:1}} onClick={()=>setForm(null)}>Cancelar</button>
+          <button style={{...S.btnP,flex:1}} onClick={guardar} disabled={saving}>{saving?'Guardando…':'Guardar →'}</button>
+        </div>
+      </div>
+    </Modal>}
+  </div>;
+}
+
+
+// ── MÓDULO BITÁCORA ───────────────────────────────────────────────
+function ModBitacora({user,onBack,pop}){
+  const [logs,setLogs]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [filtroMod,setFiltroMod]=useState('');
+  const [filtroUser,setFiltroUser]=useState('');
+
+  useEffect(()=>{
+    spGet('Bitacora','',500).then(data=>{
+      const sorted=[...data].sort((a,b)=>new Date(b.Fecha||b.Created)-new Date(a.Fecha||a.Created));
+      setLogs(sorted);setLoading(false);
+    }).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const modulos=[...new Set(logs.map(l=>l.Modulo).filter(Boolean))];
+  const usuarios=[...new Set(logs.map(l=>l.Usuario).filter(Boolean))];
+
+  const MOD_COLORS={
+    Solicitudes:{bg:'#E6F4EF',c:'#0A5C43'},
+    Aprobaciones:{bg:'#EAF0FA',c:'#0D3570'},
+    Contabilidad:{bg:'#F0EAFA',c:'#3D1F70'},
+    Finanzas:{bg:'#FEF3E2',c:'#7A3F00'},
+    Usuarios:{bg:'#EEF2F7',c:'#1E3555'},
+    Login:{bg:'#F3F4F6',c:'#6B7280'},
+  };
+
+  const filtrados=logs.filter(l=>{
+    return(!filtroMod||l.Modulo===filtroMod)&&(!filtroUser||l.Usuario===filtroUser);
+  });
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando bitácora…</div>;
+
+  return <div className="fade-in">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
+      <div>
+        <div style={S.h1}>Bitácora</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>{filtrados.length} registros · Solo visible para Administrador</div>
+      </div>
+      <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+
+    <div style={{...S.card,background:'var(--bg2)',padding:'12px 16px',marginBottom:14}}>
+      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+        <div style={{flex:1,minWidth:140}}>
+          <label style={S.lbl}>Filtrar por módulo</label>
+          <select style={S.sel} value={filtroMod} onChange={e=>setFiltroMod(e.target.value)}>
+            <option value="">Todos</option>
+            {modulos.map(m=><option key={m}>{m}</option>)}
+          </select>
+        </div>
+        <div style={{flex:1,minWidth:140}}>
+          <label style={S.lbl}>Filtrar por usuario</label>
+          <select style={S.sel} value={filtroUser} onChange={e=>setFiltroUser(e.target.value)}>
+            <option value="">Todos</option>
+            {usuarios.map(u=><option key={u}>{u}</option>)}
+          </select>
+        </div>
+        {(filtroMod||filtroUser)&&<div style={{paddingTop:22}}>
+          <button style={{...S.btnS,fontSize:12}} onClick={()=>{setFiltroMod('');setFiltroUser('');}}>× Limpiar</button>
+        </div>}
+      </div>
+    </div>
+
+    {filtrados.length===0
+      ?<div style={{...S.card,textAlign:'center',padding:40,color:'var(--text3)'}}><div style={{fontSize:28,marginBottom:8}}>📒</div>Sin registros</div>
+      :<div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Fecha y hora','Usuario','Acción','Detalle','Módulo'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>
+            {filtrados.map((l,i)=>{
+              const col=MOD_COLORS[l.Modulo]||{bg:'#F3F4F6',c:'#6B7280'};
+              return <tr key={l.Id||i} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+                <td style={{...S.td,fontSize:12,color:'var(--text2)',whiteSpace:'nowrap'}}>{fmtD(l.Fecha||l.Created)}<div style={{fontSize:10,color:'var(--text3)'}}>{l.Fecha?new Date(l.Fecha).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):''}</div></td>
+                <td style={S.td}><div style={{fontSize:13,fontWeight:500}}>{l.Usuario||'—'}</div></td>
+                <td style={S.td}><div style={{fontSize:13,fontWeight:500,color:'var(--text)'}}>{l.Accion||l.Title}</div></td>
+                <td style={{...S.td,fontSize:12,color:'var(--text2)',maxWidth:300}}>{l.Detalle||'—'}</td>
+                <td style={S.td}><span style={{fontSize:11,padding:'2px 8px',borderRadius:20,fontWeight:500,background:col.bg,color:col.c}}>{l.Modulo||'—'}</span></td>
+              </tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>;
+}
+
+// ── PORTAL INICIO ─────────────────────────────────────────────────
+const MODS_DEF=[
+  {id:'solicitudes', icon:'📋', titulo:'Solicitudes',  desc:'Crea y da seguimiento a solicitudes de pago.', color:'#0F8A65', bg:'#E6F4EF'},
+  {id:'aprobaciones',icon:'✅', titulo:'Aprobaciones', desc:'Autoriza o rechaza solicitudes de gasto.',     color:'#1A56A4', bg:'#EAF0FA'},
+  {id:'contabilidad', icon:'🔍', titulo:'Contabilidad', desc:'Valida CFDI con checklist de 6 puntos.',      color:'#6D3AB5', bg:'#F0EAFA'},
+  {id:'finanzas',    icon:'💼', titulo:'Finanzas',     desc:'Dashboard, pagos y flujo de caja.',            color:'#C06C0A', bg:'#FEF3E2'},
+  {id:'catalogos',   icon:'🗂️', titulo:'Catálogos',    desc:'Proveedores, razones sociales y categorías.',  color:'#3D5A80', bg:'#EEF2F7'},
+  {id:'usuarios',    icon:'👥', titulo:'Usuarios',     desc:'Gestiona accesos y roles del portal.',          color:'#6D3AB5', bg:'#F0EAFA'},
+  {id:'bitacora',    icon:'📒', titulo:'Bitácora',     desc:'Historial de acciones y cambios en el portal.', color:'#0F8A65', bg:'#E6F4EF'},
+];
+
+function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
+  const mods=MODS_DEF.filter(m=>ROLES_MODS[rol]?.includes(m.id));
+  return <div style={{minHeight:'100vh',background:'var(--bg3)'}}>
+    <div style={{background:'var(--bg)',borderBottom:'1px solid var(--border)',padding:'16px 32px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:36,height:36,borderRadius:10,background:'var(--green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏗️</div>
+        <div><div style={{fontSize:17,fontWeight:700}}>Portal de Pagos</div><div style={{fontSize:11,color:'var(--text3)'}}>FYTTSA · Sistema de gestión</div></div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{fontSize:12,textAlign:'right'}}>
+          <div style={{fontWeight:600}}>{user.displayName}</div>
+          <div style={{color:'var(--text3)',fontSize:11}}>{rol}</div>
+        </div>
+        <div style={{width:34,height:34,borderRadius:'50%',background:'var(--green-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'var(--green)'}}>{(user.displayName||'U')[0].toUpperCase()}</div>
+        <button onClick={onLogout} style={{...S.btnS,fontSize:12,padding:'6px 12px',color:'var(--red-text)'}}>Salir</button>
+      </div>
+    </div>
+    <div style={{padding:'28px 32px',maxWidth:1000,margin:'0 auto'}}>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:22,fontWeight:700,marginBottom:4}}>Bienvenido, {user.displayName?.split(' ')[0]}</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>Selecciona un módulo para comenzar</div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:14}}>
+        {mods.map(m=><div key={m.id} onClick={()=>onNavigate(m.id)} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='var(--shadow-lg)';}} onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='var(--shadow)';}} style={{background:'var(--bg)',borderRadius:16,border:'1px solid var(--border)',padding:'20px 18px',cursor:'pointer',transition:'all .18s',boxShadow:'var(--shadow)',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:m.color,borderRadius:'16px 16px 0 0'}}/>
+          {m.id==='aprobaciones'&&pendientes>0&&<div style={{position:'absolute',top:12,right:12,background:'var(--red)',color:'white',borderRadius:10,fontSize:11,padding:'2px 7px',fontWeight:700}}>{pendientes}</div>}
+          <div style={{width:42,height:42,borderRadius:12,background:m.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:12}}>{m.icon}</div>
+          <div style={{fontSize:15,fontWeight:700,marginBottom:5}}>{m.titulo}</div>
+          <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.65,marginBottom:14}}>{m.desc}</div>
+          <div style={{padding:'7px 12px',borderRadius:10,background:m.bg,display:'flex',justifyContent:'space-between'}}><span style={{fontSize:12,fontWeight:600,color:m.color}}>Abrir</span><span style={{color:m.color}}>→</span></div>
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
+
+// ── APP PRINCIPAL ─────────────────────────────────────────────────
+function App(){
+  const [authState,setAuthState]=useState('loading');
+  const [user,setUser]=useState(null);
+  const [rolInfo,setRolInfo]=useState(null);
+  const [modulo,setModulo]=useState(null);
+  const [toast,setToast]=useState(null);
+  const [pendientes,setPendientes]=useState(0);
+  const [loginError,setLoginError]=useState('');
+
+  function pop(msg,type){setToast({msg,err:type==='err'});setTimeout(()=>setToast(null),3500);}
+
+  useEffect(()=>{
+    msalInstance.initialize().then(()=>{
+      msalInstance.handleRedirectPromise().then(()=>{
+        const accounts=msalInstance.getAllAccounts();
+        if(accounts.length>0){
+          loadUser(accounts[0]);
+        } else {
+          setAuthState('login');
+        }
+      }).catch(e=>{setAuthState('login');setLoginError(e.message);});
+    });
+  },[]);
+
+  async function loadUser(account){
+    setAuthState('loading');
+    try{
+      const token=await msalInstance.acquireTokenSilent({scopes:SCOPES,account});
+      const graphR=await fetch('https://graph.microsoft.com/v1.0/me',{headers:{'Authorization':'Bearer '+token.accessToken}});
+      const profile=await graphR.json();
+      setUser(profile);
+      // Check user in portal
+      const portalUsers=await spGet('Usuarios_Portal','',500);
+      const found=portalUsers.find(u=>u.Correo?.toLowerCase()===profile.mail?.toLowerCase()||u.Correo?.toLowerCase()===profile.userPrincipalName?.toLowerCase());
+      if(found&&found.Activo!==false){
+        setRolInfo(found);
+        logBitacora(profile.displayName||profile.mail,'Inició sesión',profile.mail,'Login');
+        // Count pending approvals
+        const sols=await spGet('Solicitudes','Status eq \'Capturado\'',100);
+        setPendientes(sols.length);
+        setAuthState('app');
+      } else if(!found){
+        // First time - check if no users exist yet (first admin)
+        if(portalUsers.length===0){
+          // Create as admin
+          await spPost('Usuarios_Portal',{Title:profile.mail,Correo:profile.mail,Rol:'Administrador',Activo:true});
+          setRolInfo({Rol:'Administrador',Correo:profile.mail});
+          setAuthState('app');
+        } else {
+          setAuthState('noAccess');
+        }
+      } else {
+        setAuthState('noAccess');
+      }
+    }catch(e){
+      setAuthState('login');
+      setLoginError('Error al cargar perfil: '+e.message);
+    }
+  }
+
+  async function login(){
+    setLoginError('');
+    try{
+      const r=await msalInstance.loginPopup({scopes:SCOPES});
+      await loadUser(r.account);
+    }catch(e){
+      if(!e.message?.includes('user_cancelled')){
+        setLoginError('Error al iniciar sesión: '+e.message);
+      }
+    }
+  }
+
+  const rol=rolInfo?.Rol||'Solicitante';
+
+  if(authState==='loading') return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16,background:'var(--bg3)'}}>
+    <div style={{width:48,height:48,borderRadius:12,background:'var(--green-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>🏗️</div>
+    <div style={{fontSize:14,color:'var(--text2)'}}>Cargando portal…</div>
+  </div>;
+
+  if(authState==='noAccess') return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg3)'}}>
+    <div style={{background:'var(--bg)',borderRadius:16,padding:32,maxWidth:400,textAlign:'center',boxShadow:'var(--shadow-lg)'}}>
+      <div style={{fontSize:32,marginBottom:12}}>🔒</div>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Sin acceso</div>
+      <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.7}}>Tu cuenta <strong>{user?.mail}</strong> no tiene acceso al portal. Contacta al administrador para que te agregue.</div>
+    </div>
+  </div>;
+
+  if(authState==='login') return <LoginScreen onLogin={login} loading={false} error={loginError}/>;
+
+  return <div>
+    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{msalInstance.logoutPopup();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
+    {modulo==='solicitudes'&&ROLES_MODS[rol]?.includes('solicitudes')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModSolicitudes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='aprobaciones'&&ROLES_MODS[rol]?.includes('aprobaciones')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModAprobaciones user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='finanzas'&&ROLES_MODS[rol]?.includes('finanzas')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModFinanzas user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='usuarios'&&ROLES_MODS[rol]?.includes('usuarios')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModUsuarios user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='bitacora'&&ROLES_MODS[rol]?.includes('bitacora')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModBitacora user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    <Toast t={toast}/>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
