@@ -1858,59 +1858,6 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
       <BarChart data={agrupar(solsFiltradas.filter(x=>x.Centro_Costo),'Centro_Costo',10)} title="Gastos por centro de costo / sucursal" col="#3D5A80"/>
       <FunnelChart/>
     </div>}
-  </div>;
-}
-
-
-// ── PORTAL INICIO ─────────────────────────────────────────────────
-const MODS_DEF=[
-  {id:'solicitudes', icon:'📋', titulo:'Solicitudes',  desc:'Crea y da seguimiento a solicitudes de pago.', color:'#0F8A65', bg:'#E6F4EF'},
-  {id:'aprobaciones',icon:'✅', titulo:'Aprobaciones', desc:'Autoriza o rechaza solicitudes de gasto.',     color:'#1A56A4', bg:'#EAF0FA'},
-  {id:'contabilidad', icon:'🔍', titulo:'Contabilidad', desc:'Valida CFDI con checklist de 6 puntos.',      color:'#6D3AB5', bg:'#F0EAFA'},
-  {id:'finanzas',    icon:'💼', titulo:'Finanzas',     desc:'Dashboard, pagos y flujo de caja.',            color:'#C06C0A', bg:'#FEF3E2'},
-  {id:'catalogos',   icon:'🗂️', titulo:'Catálogos',    desc:'Proveedores, razones sociales y categorías.',  color:'#3D5A80', bg:'#EEF2F7'},
-  {id:'usuarios',    icon:'👥', titulo:'Usuarios',     desc:'Gestiona accesos y roles del portal.',          color:'#6D3AB5', bg:'#F0EAFA'},
-  {id:'dashboard',    icon:'📊', titulo:'Reportes',     desc:'Solicitudes del día, por periodo y gráficas de gasto.', color:'#1A56A4', bg:'#EAF0FA'},
-  {id:'bitacora',    icon:'📒', titulo:'Bitácora',     desc:'Historial de acciones y cambios en el portal.', color:'#0F8A65', bg:'#E6F4EF'},
-];
-
-function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
-  const mods=MODS_DEF.filter(m=>ROLES_MODS[rol]?.includes(m.id));
-  return <div style={{minHeight:'100vh',background:'var(--bg3)'}}>
-    <div style={{background:'var(--bg)',borderBottom:'1px solid var(--border)',padding:'16px 32px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-      <div style={{display:'flex',alignItems:'center',gap:12}}>
-        <div style={{width:36,height:36,borderRadius:10,background:'var(--green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏗️</div>
-        <div><div style={{fontSize:17,fontWeight:700}}>Portal de Pagos</div><div style={{fontSize:11,color:'var(--text3)'}}>FYTTSA · Sistema de gestión</div></div>
-      </div>
-      <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <div style={{fontSize:12,textAlign:'right'}}>
-          <div style={{fontWeight:600}}>{user.displayName}</div>
-          <div style={{color:'var(--text3)',fontSize:11}}>{rol}</div>
-        </div>
-        <div style={{width:34,height:34,borderRadius:'50%',background:'var(--green-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'var(--green)'}}>{(user.displayName||'U')[0].toUpperCase()}</div>
-        <button onClick={onLogout} style={{...S.btnS,fontSize:12,padding:'6px 12px',color:'var(--red-text)'}}>Salir</button>
-      </div>
-    </div>
-    <div style={{padding:'28px 32px',maxWidth:1000,margin:'0 auto'}}>
-      {DEMO_MODE&&<div style={{background:'#FEF3E2',border:'1px solid #F59E0B',borderRadius:'var(--radius)',padding:'10px 16px',marginBottom:20,display:'flex',alignItems:'center',gap:10}}>
-        <span style={{fontSize:16}}>⚠️</span>
-        <span style={{fontSize:13,color:'#7A3F00',fontWeight:500}}>MODO DEMO — Los datos son ficticios. Desactiva DEMO_MODE antes de producción.</span>
-      </div>}
-      <div style={{marginBottom:24}}>
-        <div style={{fontSize:22,fontWeight:700,marginBottom:4}}>Bienvenido, {user.displayName?.split(' ')[0]}</div>
-        <div style={{fontSize:13,color:'var(--text2)'}}>Selecciona un módulo para comenzar</div>
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:14}}>
-        {mods.map(m=><div key={m.id} onClick={()=>onNavigate(m.id)} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='var(--shadow-lg)';}} onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='var(--shadow)';}} style={{background:'var(--bg)',borderRadius:16,border:'1px solid var(--border)',padding:'20px 18px',cursor:'pointer',transition:'all .18s',boxShadow:'var(--shadow)',position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:m.color,borderRadius:'16px 16px 0 0'}}/>
-          {m.id==='aprobaciones'&&pendientes>0&&<div style={{position:'absolute',top:12,right:12,background:'var(--red)',color:'white',borderRadius:10,fontSize:11,padding:'2px 7px',fontWeight:700}}>{pendientes}</div>}
-          <div style={{width:42,height:42,borderRadius:12,background:m.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:12}}>{m.icon}</div>
-          <div style={{fontSize:15,fontWeight:700,marginBottom:5}}>{m.titulo}</div>
-          <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.65,marginBottom:14}}>{m.desc}</div>
-          <div style={{padding:'7px 12px',borderRadius:10,background:m.bg,display:'flex',justifyContent:'space-between'}}><span style={{fontSize:12,fontWeight:600,color:m.color}}>Abrir</span><span style={{color:m.color}}>→</span></div>
-        </div>)}
-      </div>
-    </div>
     {/* ── Drawer de acción ── */}
     {drawer&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',zIndex:1000,display:'flex',justifyContent:'flex-end'}} onClick={e=>{if(e.target===e.currentTarget)setDrawer(null);}}>
       <div style={{width:'100%',maxWidth:460,background:'var(--bg)',height:'100%',overflowY:'auto',boxShadow:'-8px 0 28px rgba(0,0,0,.2)',padding:24}} className="fade-in">
@@ -1973,30 +1920,57 @@ function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
 }
 
 
-// ── ERROR BOUNDARY ────────────────────────────────────────────────
-class ErrorBoundary extends React.Component {
-  constructor(props){ super(props); this.state={hasError:false,error:null}; }
-  static getDerivedStateFromError(error){ return {hasError:true,error}; }
-  componentDidCatch(error,info){ console.error('Portal error:',error,info); }
-  render(){
-    if(this.state.hasError){
-      return <div style={{padding:40,maxWidth:600,margin:'0 auto'}}>
-        <div style={{background:'#FEF0EF',border:'1px solid #FCA5A5',borderRadius:12,padding:24}}>
-          <div style={{fontSize:20,marginBottom:8}}>⚠️ Error en el portal</div>
-          <div style={{fontSize:13,color:'#7A0F0B',marginBottom:16,fontFamily:'monospace',wordBreak:'break-all'}}>
-            {this.state.error?.message||'Error desconocido'}
-          </div>
-          <button onClick={()=>this.setState({hasError:false,error:null})} style={{background:'#C8251F',color:'white',padding:'8px 16px',borderRadius:8,border:'none',cursor:'pointer',fontSize:13}}>
-            Intentar de nuevo
-          </button>
-        </div>
-      </div>;
-    }
-    return this.props.children;
-  }
-}
+// ── PORTAL INICIO ─────────────────────────────────────────────────
+const MODS_DEF=[
+  {id:'solicitudes', icon:'📋', titulo:'Solicitudes',  desc:'Crea y da seguimiento a solicitudes de pago.', color:'#0F8A65', bg:'#E6F4EF'},
+  {id:'aprobaciones',icon:'✅', titulo:'Aprobaciones', desc:'Autoriza o rechaza solicitudes de gasto.',     color:'#1A56A4', bg:'#EAF0FA'},
+  {id:'contabilidad', icon:'🔍', titulo:'Contabilidad', desc:'Valida CFDI con checklist de 6 puntos.',      color:'#6D3AB5', bg:'#F0EAFA'},
+  {id:'finanzas',    icon:'💼', titulo:'Finanzas',     desc:'Dashboard, pagos y flujo de caja.',            color:'#C06C0A', bg:'#FEF3E2'},
+  {id:'catalogos',   icon:'🗂️', titulo:'Catálogos',    desc:'Proveedores, razones sociales y categorías.',  color:'#3D5A80', bg:'#EEF2F7'},
+  {id:'usuarios',    icon:'👥', titulo:'Usuarios',     desc:'Gestiona accesos y roles del portal.',          color:'#6D3AB5', bg:'#F0EAFA'},
+  {id:'dashboard',    icon:'📊', titulo:'Reportes',     desc:'Solicitudes del día, por periodo y gráficas de gasto.', color:'#1A56A4', bg:'#EAF0FA'},
+  {id:'bitacora',    icon:'📒', titulo:'Bitácora',     desc:'Historial de acciones y cambios en el portal.', color:'#0F8A65', bg:'#E6F4EF'},
+];
 
-// ── APP PRINCIPAL ─────────────────────────────────────────────────
+function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
+  const mods=MODS_DEF.filter(m=>ROLES_MODS[rol]?.includes(m.id));
+  return <div style={{minHeight:'100vh',background:'var(--bg3)'}}>
+    <div style={{background:'var(--bg)',borderBottom:'1px solid var(--border)',padding:'16px 32px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:36,height:36,borderRadius:10,background:'var(--green)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏗️</div>
+        <div><div style={{fontSize:17,fontWeight:700}}>Portal de Pagos</div><div style={{fontSize:11,color:'var(--text3)'}}>FYTTSA · Sistema de gestión</div></div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{fontSize:12,textAlign:'right'}}>
+          <div style={{fontWeight:600}}>{user.displayName}</div>
+          <div style={{color:'var(--text3)',fontSize:11}}>{rol}</div>
+        </div>
+        <div style={{width:34,height:34,borderRadius:'50%',background:'var(--green-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'var(--green)'}}>{(user.displayName||'U')[0].toUpperCase()}</div>
+        <button onClick={onLogout} style={{...S.btnS,fontSize:12,padding:'6px 12px',color:'var(--red-text)'}}>Salir</button>
+      </div>
+    </div>
+    <div style={{padding:'28px 32px',maxWidth:1000,margin:'0 auto'}}>
+      {DEMO_MODE&&<div style={{background:'#FEF3E2',border:'1px solid #F59E0B',borderRadius:'var(--radius)',padding:'10px 16px',marginBottom:20,display:'flex',alignItems:'center',gap:10}}>
+        <span style={{fontSize:16}}>⚠️</span>
+        <span style={{fontSize:13,color:'#7A3F00',fontWeight:500}}>MODO DEMO — Los datos son ficticios. Desactiva DEMO_MODE antes de producción.</span>
+      </div>}
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:22,fontWeight:700,marginBottom:4}}>Bienvenido, {user.displayName?.split(' ')[0]}</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>Selecciona un módulo para comenzar</div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:14}}>
+        {mods.map(m=><div key={m.id} onClick={()=>onNavigate(m.id)} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='var(--shadow-lg)';}} onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='var(--shadow)';}} style={{background:'var(--bg)',borderRadius:16,border:'1px solid var(--border)',padding:'20px 18px',cursor:'pointer',transition:'all .18s',boxShadow:'var(--shadow)',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:m.color,borderRadius:'16px 16px 0 0'}}/>
+          {m.id==='aprobaciones'&&pendientes>0&&<div style={{position:'absolute',top:12,right:12,background:'var(--red)',color:'white',borderRadius:10,fontSize:11,padding:'2px 7px',fontWeight:700}}>{pendientes}</div>}
+          <div style={{width:42,height:42,borderRadius:12,background:m.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:12}}>{m.icon}</div>
+          <div style={{fontSize:15,fontWeight:700,marginBottom:5}}>{m.titulo}</div>
+          <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.65,marginBottom:14}}>{m.desc}</div>
+          <div style={{padding:'7px 12px',borderRadius:10,background:m.bg,display:'flex',justifyContent:'space-between'}}><span style={{fontSize:12,fontWeight:600,color:m.color}}>Abrir</span><span style={{color:m.color}}>→</span></div>
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
 function App(){
   const [authState,setAuthState]=useState('loading');
   const [user,setUser]=useState(null);
