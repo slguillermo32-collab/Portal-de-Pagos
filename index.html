@@ -201,15 +201,13 @@ const SCOPES = ['User.Read','Sites.ReadWrite.All'];
 
 // ── SHAREPOINT API ────────────────────────────────────────────────
 async function getToken() {
+  if (DEMO_MODE) return 'demo-token';
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length === 0) throw new Error('No hay sesión');
   try {
     const r = await msalInstance.acquireTokenSilent({scopes:SCOPES, account:accounts[0]});
-    console.log('TOKEN_SCOPES:', r.scopes);
-    console.log('TOKEN_ACCOUNT:', r.account?.username);
     return r.accessToken;
   } catch(e) {
-    console.warn('Silent token failed, redirecting:', e.message);
     await msalInstance.acquireTokenRedirect({scopes:SCOPES});
     return null;
   }
@@ -222,48 +220,35 @@ let _siteId = null;
 let _listIds = {};
 
 async function getSiteId() {
+  if (DEMO_MODE) return 'demo-site-id';
   if (_siteId) return _siteId;
   const token = await getToken();
   const r = await fetch(GRAPH + '/sites/' + SP_HOSTNAME + ':/' + SP_SITEPATH + ':', {
     headers: {'Authorization':'Bearer '+token, 'Accept':'application/json'}
   });
-  if (!r.ok) { const e=await r.text(); console.error('getSiteId error:', r.status, e); throw new Error('No se pudo obtener el sitio: ' + r.status); }
+  if (!r.ok) { const e=await r.text(); throw new Error('No se pudo obtener el sitio: ' + r.status + ' ' + e.substring(0,100)); }
   const d = await r.json();
-  console.log('Site ID:', d.id);
   _siteId = d.id;
   return _siteId;
 }
 
 async function getListId(listName) {
+  if (DEMO_MODE) return 'demo-list-' + listName;
   if (_listIds[listName]) return _listIds[listName];
   const token = await getToken();
   const siteId = await getSiteId();
   const url = GRAPH + "/sites/" + siteId + "/lists?$filter=displayName eq '" + listName + "'";
-  console.log('getListId URL:', url);
-  const r = await fetch(url, {
-    headers: {Authorization: "Bearer " + token, Accept: "application/json"}
-  });
-  if (!r.ok) {
-    const e = await r.text();
-    console.error('getListId error:', r.status, e);
-    throw new Error('Lista no encontrada: ' + listName + ' | Status: ' + r.status);
-  }
+  const r = await fetch(url, {headers: {Authorization: "Bearer " + token, Accept: "application/json"}});
+  if (!r.ok) { const e = await r.text(); throw new Error('Lista no encontrada: ' + listName + ' | ' + r.status); }
   const d = await r.json();
-  if (!d.value || d.value.length === 0) {
-    throw new Error('Lista "' + listName + '" no existe. Verifica el nombre en SharePoint.');
-  }
-  console.log('List ID for', listName, ':', d.value[0].id);
+  if (!d.value || d.value.length === 0) throw new Error('Lista "' + listName + '" no existe en SharePoint.');
   _listIds[listName] = d.value[0].id;
   return _listIds[listName];
 }
 
-// spGet defined above with DEMO_MODE support
 
-// spPost defined above with DEMO_MODE support
 
-// spPatch defined above with DEMO_MODE support
 
-// spDelete defined above with DEMO_MODE support
 
 // ── CONSTANTES ────────────────────────────────────────────────────
 const ROLES = ['Administrador','Finanzas','Contador','Solicitante'];
@@ -345,6 +330,7 @@ function LoginScreen({onLogin,loading,error}){
 
 // ── BITÁCORA ──────────────────────────────────────────────────────
 async function logBitacora(usuario, accion, detalle, modulo) {
+  if (DEMO_MODE) { return; } // No-op in demo
   try {
     await spPost('Bitacora', {
       Title: accion,
@@ -355,7 +341,6 @@ async function logBitacora(usuario, accion, detalle, modulo) {
       Fecha: new Date().toISOString(),
     });
   } catch(e) {
-    console.warn('Bitacora error:', e.message);
   }
 }
 
@@ -456,7 +441,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
     Es_Parcial:false,Tipo_Documento:'Factura',Tipo_Pago:'Contado',
     Metodo_Pago:'Transferencia',Prioridad:'Media',Fecha_Requerida:'',
     Status:'Capturado',Notas:'',Es_Anticipo:false,
-    Solicitante:user.displayName||user.mail,
+    Solicitante:(user&&user.displayName)||'—',
     Fecha_Captura: new Date().toISOString(),
     Es_Anticipo: false,
     Monto_Pagar: '',
@@ -1987,6 +1972,30 @@ function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
   </div>;
 }
 
+
+// ── ERROR BOUNDARY ────────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props){ super(props); this.state={hasError:false,error:null}; }
+  static getDerivedStateFromError(error){ return {hasError:true,error}; }
+  componentDidCatch(error,info){ console.error('Portal error:',error,info); }
+  render(){
+    if(this.state.hasError){
+      return <div style={{padding:40,maxWidth:600,margin:'0 auto'}}>
+        <div style={{background:'#FEF0EF',border:'1px solid #FCA5A5',borderRadius:12,padding:24}}>
+          <div style={{fontSize:20,marginBottom:8}}>⚠️ Error en el portal</div>
+          <div style={{fontSize:13,color:'#7A0F0B',marginBottom:16,fontFamily:'monospace',wordBreak:'break-all'}}>
+            {this.state.error?.message||'Error desconocido'}
+          </div>
+          <button onClick={()=>this.setState({hasError:false,error:null})} style={{background:'#C8251F',color:'white',padding:'8px 16px',borderRadius:8,border:'none',cursor:'pointer',fontSize:13}}>
+            Intentar de nuevo
+          </button>
+        </div>
+      </div>;
+    }
+    return this.props.children;
+  }
+}
+
 // ── APP PRINCIPAL ─────────────────────────────────────────────────
 function App(){
   const [authState,setAuthState]=useState('loading');
@@ -2001,13 +2010,12 @@ function App(){
 
   useEffect(()=>{
     if(DEMO_MODE){
-      // Skip Microsoft login in demo mode
       setUser(DEMO_USER);
       setRolInfo({Rol:'Administrador', Correo:DEMO_USER.mail});
       setPendientes(2);
       setAuthState('app');
-      setModulo('dashboard'); // Dashboard as default for demo
-      return;
+      setModulo('dashboard');
+      return; // Skip ALL Microsoft calls
     }
     msalInstance.initialize().then(()=>{
       msalInstance.handleRedirectPromise().then(result=>{
@@ -2092,7 +2100,8 @@ function App(){
   if(authState==='login') return <LoginScreen onLogin={login} loading={false} error={loginError}/>;
 
   return <div>
-    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{if(DEMO_MODE){setModulo(null);return;}msalInstance.logoutRedirect();setAuthState('login');setUser(null);setRolInfo(null);setModulo(null);}}/>}
+    <ErrorBoundary>
+    {!modulo&&<PortalInicio user={user} rol={rol} onNavigate={setModulo} pendientes={pendientes} onLogout={()=>{if(DEMO_MODE){setUser(null);setRolInfo(null);setModulo(null);setAuthState('login');return;}msalInstance.logoutRedirect();}}/>}
     {modulo==='solicitudes'&&ROLES_MODS[rol]?.includes('solicitudes')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModSolicitudes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='aprobaciones'&&ROLES_MODS[rol]?.includes('aprobaciones')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModAprobaciones user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='finanzas'&&ROLES_MODS[rol]?.includes('finanzas')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModFinanzas user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
@@ -2101,6 +2110,7 @@ function App(){
     {modulo==='catalogos'&&ROLES_MODS[rol]?.includes('catalogos')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModCatalogos user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='usuarios'&&ROLES_MODS[rol]?.includes('usuarios')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModUsuarios user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='bitacora'&&ROLES_MODS[rol]?.includes('bitacora')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModBitacora user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    </ErrorBoundary>
     <Toast t={toast}/>
   </div>;
 }
