@@ -59,10 +59,11 @@ const DEMO_DATA = {
     {Id:4, Correo:'solicitante@fyttsa.com', Rol:'Solicitante', Activo:true, Title:'Ana Martínez'},
   ],
   solicitudes: [
-    {Id:1, Folio:'SOL-2025-0001', Proveedor:'Ferretería Industrial SA', RFC_Proveedor:'FIS890101ABC', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'A-00123', Tipo_Documento:'Factura', Importe:85000, Subtotal:73275.86, IVA:11724.14, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-10', Status:'Capturado', Notas:'Urgente para continuar obra', Solicitante:'Ana Martínez'},
-    {Id:2, Folio:'SOL-2025-0002', Proveedor:'Concretos del Norte', RFC_Proveedor:'CNO920315XYZ', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'B-00456', Tipo_Documento:'Factura', Importe:42000, Subtotal:36206.90, IVA:5793.10, Metodo_Pago:'Transferencia', Prioridad:'Media', Fecha_Requerida:'2025-06-15', Status:'Autorizado por contabilidad', Notas:'', Solicitante:'Ana Martínez'},
+    {Id:1, Folio:'SOL-2025-0001', Razon_Social:'Guimar', Proveedor:'Ferretería Industrial SA', RFC_Proveedor:'FIS890101ABC', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'A-00123', Tipo_Documento:'Factura', Importe:85000, Subtotal:73275.86, IVA:11724.14, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-10', Status:'Capturado', Notas:'Urgente para continuar obra', Solicitante:'Ana Martínez'},
+    {Id:2, Folio:'SOL-2025-0002', Razon_Social:'Guimar', Centro_Costo:'Totolcingo', Proveedor:'Concretos del Norte', RFC_Proveedor:'CNO920315XYZ', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'B-00456', Tipo_Documento:'Factura', Importe:42000, Subtotal:36206.90, IVA:5793.10, Metodo_Pago:'Transferencia', Prioridad:'Media', Fecha_Requerida:'2025-06-15', Status:'Autorizado por contabilidad', Notas:'', Solicitante:'Ana Martínez'},
     {Id:3, Folio:'SOL-2025-0003', Proveedor:'Servicios Eléctricos MX', RFC_Proveedor:'SEM010101DEF', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Instalaciones especiales', Centro_Costo:'Obra Bodega Sur', Factura:'COT-2025-0001', Tipo_Documento:'Cotización', Importe:28500, Subtotal:24568.97, IVA:3931.03, Metodo_Pago:'Transferencia', Prioridad:'Baja', Fecha_Requerida:'2025-06-20', Status:'En revisión contable', Notas:'Cotización previa al trabajo', Solicitante:'Guillermo Sánchez'},
-    {Id:4, Folio:'SOL-2025-0004', Proveedor:'Transportes Rápidos SA', RFC_Proveedor:'TRS950601GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Operaciones', Categoria:'Mantenimiento vehicular', Centro_Costo:'Administración', Factura:'C-00789', Tipo_Documento:'Factura', Importe:15200, Subtotal:13103.45, IVA:2096.55, Metodo_Pago:'Tarjeta empresarial', Prioridad:'Media', Fecha_Requerida:'2025-06-08', Status:'Programado', Fecha_Programada:'2025-06-08', Notas:'', Solicitante:'Carlos López'},
+    {Id:6, Folio:'SOL-2025-0006', Proveedor:'Constructores Asociados SA', RFC_Proveedor:'CAS001122GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Servicios de construcción', Centro_Costo:'Obra Torre Norte', Factura:'E-00654', Tipo_Documento:'Factura', Importe:120000, Subtotal:103448.28, IVA:16551.72, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-09', Status:'En revisión contable', Notas:'Pago por avance de obra', Solicitante:'Ana Martínez'},
+    {Id:4, Folio:'SOL-2025-0004', Razon_Social:'Cider', Centro_Costo:'Matriz', Proveedor:'Transportes Rápidos SA', RFC_Proveedor:'TRS950601GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Operaciones', Categoria:'Mantenimiento vehicular', Centro_Costo:'Administración', Factura:'C-00789', Tipo_Documento:'Factura', Importe:15200, Subtotal:13103.45, IVA:2096.55, Metodo_Pago:'Tarjeta empresarial', Prioridad:'Media', Fecha_Requerida:'2025-06-08', Status:'Programado', Fecha_Programada:'2025-06-08', Notas:'', Solicitante:'Carlos López'},
     {Id:5, Folio:'SOL-2025-0005', Proveedor:'Papelería y Oficinas SA', RFC_Proveedor:'POS880901JKL', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Administración', Categoria:'Papelería y consumibles admon.', Centro_Costo:'Administración', Factura:'D-00321', Tipo_Documento:'Factura', Importe:3800, Subtotal:3275.86, IVA:524.14, Metodo_Pago:'Efectivo', Prioridad:'Baja', Fecha_Requerida:'2025-06-12', Status:'Pagado', Fecha_Pago:'2025-06-05', Notas:'', Solicitante:'Ana Martínez'},
   ],
   proveedores: [
@@ -72,11 +73,12 @@ const DEMO_DATA = {
     {Id:4, Title:'Transportes Rápidos SA', Clave:'TRA001', RFC:'TRS950601GHI', CLABE:'032145678901234569', Banco:'SANTANDER'},
   ],
   razones: [
-    {Id:1, Title:'Constructora FYTTSA SA de CV', RFC:'CFY850101MNO'},
-    {Id:2, Title:'Inmobiliaria FYTTSA SA de CV', RFC:'IFY900215PQR'},
+    {Id:1, Title:'Guimar', RFC:'GUI850101MNO', Centros:'Totolcingo,Tepexpan,Via Morelos,Vallejo,Texcoco,Matriz,Mayoreo,Materiales'},
+    {Id:2, Title:'Cider', RFC:'CID900215PQR', Centros:'Tepexpan,Zacango,Matriz'},
+    {Id:3, Title:'Constructora FYTTSA SA de CV', RFC:'CFY001122STU', Centros:'Obra Torre Norte,Obra Bodega Sur,Administración'},
   ],
-  cats: ['Materiales de construcción','Instalaciones especiales','Mantenimiento vehicular','Papelería y consumibles admon.','Honorarios y subcontratistas','Seguridad social (IMSS/INFONAVIT)','Electricidad','Agua y drenaje','Otro'],
-  areas: ['Construcción','Administración','Operaciones','Contabilidad','Dirección','Compras'],
+  cats: ['Mercancía para venta','Material de construcción','Servicios profesionales','Combustible','Fletes','Mantenimiento','Papelería y consumibles','Servicios (luz, agua, internet)','Nómina','Impuestos','Viáticos','Marketing','Tecnología','Reembolso','Otro'],
+  areas: ['Comercial','Construcción','Operaciones','Administración','Capital Humano','Sistemas','Dirección'],
   bitacora: [
     {Id:1, Usuario:'Guillermo Sánchez', Accion:'Inició sesión', Detalle:'gsanchezl@fyttsa.com', Modulo:'Login', Fecha:'2025-06-07T08:30:00'},
     {Id:2, Usuario:'Ana Martínez', Accion:'Creó solicitud', Detalle:'SOL-2025-0001 · Ferretería Industrial SA · $85,000', Modulo:'Solicitudes', Fecha:'2025-06-07T09:15:00'},
@@ -266,9 +268,9 @@ async function getListId(listName) {
 // ── CONSTANTES ────────────────────────────────────────────────────
 const ROLES = ['Administrador','Finanzas','Contador','Solicitante'];
 const ROLES_MODS = {
-  Administrador: ['solicitudes','aprobaciones','contabilidad','finanzas','catalogos','usuarios','bitacora'],
-  Finanzas:      ['solicitudes','aprobaciones','finanzas','catalogos'],
-  Contador:      ['solicitudes','contabilidad','catalogos'],
+  Administrador: ['solicitudes','aprobaciones','contabilidad','finanzas','catalogos','usuarios','bitacora','dashboard'],
+  Finanzas:      ['solicitudes','aprobaciones','finanzas','catalogos','dashboard'],
+  Contador:      ['solicitudes','contabilidad','catalogos','dashboard'],
   Solicitante:   ['solicitudes'],
 };
 const STATUS_OPTS = ['Capturado','En revisión contable','Rechazado por contabilidad','Autorizado por contabilidad','En revisión financiera','Programado','Pagado','Cancelado','Rechazado'];
@@ -357,6 +359,82 @@ async function logBitacora(usuario, accion, detalle, modulo) {
   }
 }
 
+
+// ── EXTRACTOR DE PDF/XML (con modo demo) ─────────────────────────
+async function extractDocument(file, apiKey) {
+  if (DEMO_MODE) {
+    // Simulate a 1.5s delay like a real API call
+    await new Promise(r => setTimeout(r, 1500));
+    // Return realistic fake data
+    return {
+      ok: true,
+      rfcEm: 'FIS890101ABC',
+      nomEm: 'Ferretería Industrial SA de CV',
+      rfcRec: 'CFY850101MNO',
+      nomRec: 'Constructora FYTTSA SA de CV',
+      usoCFDI: 'G03',
+      metodoPago: 'PPD',
+      formaPago: '03',
+      fecha: new Date().toISOString().split('T')[0],
+      subtotal: 73275.86,
+      iva: 11724.14,
+      ivaRet: 0,
+      total: 85000,
+      uuid: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
+      esCot: false,
+    };
+  }
+  // Real extraction via Claude API
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const base64 = e.target.result;
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 800,
+            messages: [{role:'user', content:[
+              {type: file.type==='application/pdf'?'document':'image', source:{type:'base64',media_type:file.type,data:base64.split(',')[1]}},
+              {type:'text', text:'Extrae datos de este documento fiscal mexicano. Responde SOLO JSON sin markdown: {"rfcEm":"","nomEm":"","rfcRec":"","nomRec":"","usoCFDI":"","metodoPago":"","formaPago":"","fecha":"YYYY-MM-DD","subtotal":0,"iva":0,"ivaRet":0,"total":0,"uuid":"","esCot":false}'}
+            ]}]
+          })
+        });
+        const data = await resp.json();
+        const text = data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+        const parsed = JSON.parse(text);
+        resolve({ok:true, ...parsed});
+      } catch(e) {
+        resolve({ok:false, error:e.message});
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+
+function CentroCostoField({razones,razonSel,value,onChange}){
+  const razObj=razones.find(r=>(r.Title||r.Nombre)===razonSel);
+  const centros=razObj&&razObj.Centros?razObj.Centros.split(',').map(x=>x.trim()).filter(Boolean):[];
+  const [showNew,setShowNew]=useState(false);
+  const [newVal,setNewVal]=useState('');
+  if(!centros.length) return <Fld label="Centro de costo / Sucursal"><input style={S.inp} placeholder="Centro de costo o sucursal…" value={value} onChange={e=>onChange(e.target.value)}/></Fld>;
+  return <Fld label="Centro de costo / Sucursal">
+    <select style={S.sel} value={showNew?'__nuevo__':value} onChange={e=>{if(e.target.value==='__nuevo__'){setShowNew(true);onChange('');}else{setShowNew(false);onChange(e.target.value);}}}>
+      <option value="">— Selecciona sucursal —</option>
+      {centros.map(cc=><option key={cc} value={cc}>{cc}</option>)}
+      <option value="__nuevo__">+ Agregar nuevo…</option>
+    </select>
+    {showNew&&<div style={{display:'flex',gap:6,marginTop:6}}>
+      <input style={{...S.inp,flex:1}} autoFocus placeholder="Nombre del centro de costo" value={newVal} onChange={e=>setNewVal(e.target.value)}/>
+      <button style={S.btnP} onClick={()=>{if(newVal.trim()){onChange(newVal.trim());setShowNew(false);setNewVal('');}}}>✓</button>
+      <button style={S.btnS} onClick={()=>{setShowNew(false);setNewVal('');}}>×</button>
+    </div>}
+  </Fld>;
+}
+
 // ── MÓDULO SOLICITUDES ────────────────────────────────────────────
 function ModSolicitudes({user,rol,onBack,pop}){
   const [sols,setSols]=useState([]);
@@ -369,6 +447,8 @@ function ModSolicitudes({user,rol,onBack,pop}){
   const [sel,setSel]=useState(null);
   const [form,setForm]=useState(null);
   const [saving,setSaving]=useState(false);
+  const [extracting,setExtracting]=useState(false);
+  const [vistaFiltro,setVistaFiltro]=useState('todas');
 
   const FORM0={
     Folio:'',Proveedor:'',RFC_Proveedor:'',Razon_Social:'',Area:'',Categoria:'',
@@ -416,8 +496,13 @@ function ModSolicitudes({user,rol,onBack,pop}){
     setSaving(false);
   }
 
+  const solsFiltradas = vistaFiltro==='todas' ? sols
+    : vistaFiltro==='mias' ? sols.filter(x=>x.Solicitante===user.displayName)
+    : vistaFiltro==='pendientes' ? sols.filter(x=>!['Pagado','Cancelado','Rechazado'].includes(x.Status))
+    : sols.filter(x=>x.Status==='Pagado');
+
   const sf=p=>setForm(prev=>({...prev,...p}));
-  const puedeEditar=x=>rol==='Administrador'||x.Status==='Capturado';
+  const puedeEditar=x=>x.Status==='Capturado';
 
   if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando solicitudes…</div>;
 
@@ -431,6 +516,23 @@ function ModSolicitudes({user,rol,onBack,pop}){
     </div>
 
     <div style={S.card}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+        <div style={S.h2}>Datos del documento</div>
+        <label style={{...S.btnS,cursor:'pointer',fontSize:12,padding:'7px 14px',display:'inline-flex',alignItems:'center',gap:6,opacity:extracting?0.6:1}}>
+          📎 {extracting?'Leyendo…':'Subir PDF / XML'}
+          <input type="file" accept=".pdf,.xml,image/*" style={{display:'none'}} disabled={extracting} onChange={async e=>{
+            const file=e.target.files[0]; if(!file)return;
+            setExtracting(true);
+            const result=await extractDocument(file,null);
+            if(result.ok){
+              sf({Proveedor:result.nomEm||form.Proveedor,RFC_Proveedor:result.rfcEm||form.RFC_Proveedor,Razon_Social:result.nomRec||form.Razon_Social,Factura:result.uuid||form.Factura,Importe:result.total||form.Importe,Subtotal:result.subtotal||form.Subtotal,IVA:result.iva||form.IVA,Tipo_Documento:result.esCot?'Cotización':'Factura',Fecha_Requerida:result.fecha||form.Fecha_Requerida});
+              pop('✓ Documento leído — verifica los datos');
+            } else { pop('Error al leer: '+result.error,'err'); }
+            setExtracting(false); e.target.value='';
+          }}/>
+        </label>
+      </div>
+      {DEMO_MODE&&extracting&&<div style={{padding:'10px 14px',background:'var(--blue-bg)',borderRadius:'var(--radius)',fontSize:12,color:'var(--blue)',marginBottom:12}}>⏳ Simulando lectura del documento con IA…</div>}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
         <Fld label="Proveedor" req>
           <select style={S.sel} value={form.Proveedor} onChange={e=>sf({Proveedor:e.target.value})}>
@@ -466,9 +568,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
           </select>
         </Fld>
 
-        <Fld label="Centro de costo / Proyecto">
-          <input style={S.inp} placeholder="Ej. Obra Torre Norte, Admin 2025…" value={form.Centro_Costo} onChange={e=>sf({Centro_Costo:e.target.value})}/>
-        </Fld>
+<CentroCostoField razones={razones} razonSel={form.Razon_Social} value={form.Centro_Costo} onChange={v=>sf({Centro_Costo:v})}/>
 
         <Fld label="No. Factura / UUID">
           <input style={S.inp} placeholder="UUID o folio de factura" value={form.Factura} onChange={e=>sf({Factura:e.target.value})}/>
@@ -525,6 +625,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
         {puedeEditar(sel)&&<button onClick={()=>{setForm({...FORM0,...sel});setVista('form');}} style={{...S.btnS,fontSize:12,padding:'5px 12px'}}>✏️ Editar</button>}
       </div>
     </div>
+    <DupBanner sol={sel} sols={sols}/>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
       <div style={S.card}>
         <div style={S.h2}>Datos del pago</div>
@@ -558,18 +659,23 @@ function ModSolicitudes({user,rol,onBack,pop}){
   </div>;
 
   return <div>
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:12}}>
       <div>
         <div style={S.h1}>Solicitudes de pago</div>
-        <div style={{fontSize:13,color:'var(--text2)'}}>{sols.length} solicitudes registradas</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>{vistaFiltro==='mias'?`${solsFiltradas.length} mis solicitudes`:`${sols.length} solicitudes registradas`}</div>
       </div>
       <div style={{display:'flex',gap:8}}>
         <button style={S.btnS} onClick={onBack}>← Portal</button>
         <button style={S.btnP} onClick={()=>{setForm({...FORM0});setSel(null);setVista('form');}}>+ Nueva solicitud</button>
       </div>
     </div>
+    <div style={{display:'flex',gap:6,marginBottom:14}}>
+      {['todas','mias','pendientes','pagadas'].map(f=><button key={f} onClick={()=>setVistaFiltro(f)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(vistaFiltro===f?'var(--green)':'var(--border)'),background:vistaFiltro===f?'var(--green)':'transparent',color:vistaFiltro===f?'white':'var(--text2)',fontSize:12,fontWeight:vistaFiltro===f?600:400,cursor:'pointer'}}>
+        {f==='todas'?'Todas':f==='mias'?'Mis solicitudes':f==='pendientes'?'Pendientes':'Pagadas'}
+      </button>)}
+    </div>
 
-    {sols.length===0
+    {solsFiltradas.length===0
       ?<div style={{...S.card,textAlign:'center',padding:60}}>
         <div style={{fontSize:40,marginBottom:12}}>📋</div>
         <div style={{fontSize:16,fontWeight:600,marginBottom:8}}>Sin solicitudes aún</div>
@@ -578,7 +684,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
       :<div style={{...S.card,padding:0,overflow:'hidden'}}>
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead><tr>{['Folio','Proveedor','Categoría','Importe','Prior.','Status','Fecha req.'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
-          <tbody>{sols.map(x=><tr key={x.Id||x.id} onClick={()=>{setSel(x);setVista('detalle');}} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+          <tbody>{solsFiltradas.map(x=><tr key={x.Id||x.id} onClick={()=>{setSel(x);setVista('detalle');}} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
             <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
             <td style={S.td}><div style={{fontWeight:500}}>{x.Proveedor||'—'}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
             <td style={S.td}><div style={{fontSize:12}}>{x.Categoria}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Area}</div></td>
@@ -634,6 +740,7 @@ function ModAprobaciones({user,rol,onBack,pop}){
       <div><div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio}</div><div style={S.h1}>{sel.Proveedor}</div></div>
       <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
     </div>
+    <DupBanner sol={sel} sols={sols}/>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
       <div style={S.card}>
         <div style={S.h2}>Detalle de la solicitud</div>
@@ -727,6 +834,7 @@ function ModFinanzas({user,rol,onBack,pop}){
       <div><div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio}</div><div style={S.h1}>{sel.Proveedor}</div></div>
       <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
     </div>
+    <DupBanner sol={sel} sols={sols}/>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
       <div style={S.card}>
         <div style={S.h2}>Datos</div>
@@ -964,6 +1072,564 @@ function ModBitacora({user,onBack,pop}){
   </div>;
 }
 
+
+
+// ── BANNER DE DUPLICADOS ──────────────────────────────────────────
+function DupBanner({sol, sols}){
+  if(!sol||!sols) return null;
+  const dups=sols.filter(x=>
+    x.Id!==sol.Id &&
+    x.Status!=='Cancelado' &&
+    x.Status!=='Rechazado' &&
+    x.Status!=='Rechazado por contabilidad' &&
+    sol.Factura && x.Factura &&
+    x.Factura.trim().toLowerCase()===sol.Factura.trim().toLowerCase()
+  );
+  if(!dups.length) return null;
+  return <div style={{padding:'12px 16px',background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:16,borderLeft:'4px solid var(--red)'}}>
+    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+      <span style={{fontSize:16}}>⚠️</span>
+      <span style={{fontWeight:700,fontSize:13,color:'var(--red-text)'}}>POSIBLE DUPLICADO DETECTADO</span>
+    </div>
+    {dups.map(d=><div key={d.Id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 10px',background:'white',borderRadius:'var(--radius)',border:'1px solid #FCA5A5',marginBottom:4}}>
+      <div>
+        <span style={{fontFamily:'monospace',fontWeight:700,color:'var(--red)',fontSize:12}}>{d.Folio||d.Title}</span>
+        <span style={{fontSize:12,color:'var(--text2)',marginLeft:8}}>{d.Proveedor} · {fmt(d.Importe)}</span>
+      </div>
+      <Badge val={d.Status} map={ST_COL}/>
+    </div>)}
+    <div style={{fontSize:11,color:'var(--red-text)',marginTop:6}}>Verifica antes de continuar — misma factura/UUID en otra solicitud.</div>
+  </div>;
+}
+
+// ── MÓDULO CONTABILIDAD ───────────────────────────────────────────
+function ModContabilidad({user,rol,onBack,pop}){
+  const [sols,setSols]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [sel,setSel]=useState(null);
+  const [ck,setCk]=useState({rfc:false,rs:false,uso:false,fecha:false,metodo:false,forma:false,notas:''});
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{
+    spGet('Solicitudes').then(s=>{
+      setSols(s.filter(x=>['En revisión contable','Autorizado por contabilidad','Rechazado por contabilidad'].includes(x.Status)));
+      setLoading(false);
+    }).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const allOk=ck.rfc&&ck.rs&&ck.uso&&ck.fecha&&ck.metodo&&ck.forma;
+
+  async function validar(ok){
+    setSaving(true);
+    const newStatus=ok?'Autorizado por contabilidad':'Rechazado por contabilidad';
+    try{
+      await spPatch('Solicitudes',sel.Id,{Status:newStatus});
+      await spPost('Bitacora',{Title:ok?'Validó CFDI':'Rechazó contabilidad',Usuario:user.displayName,Accion:ok?'Validó CFDI':'Rechazó en contabilidad',Detalle:(sel.Folio||sel.Title)+' → '+newStatus,Modulo:'Contabilidad',Fecha:new Date().toISOString()});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:newStatus}:x));
+      setSel(null);
+      pop(ok?'✓ CFDI validado':'Solicitud rechazada');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando…</div>;
+
+  if(sel) return <div style={{maxWidth:780}} className="fade-in">
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
+      <button style={S.btnS} onClick={()=>setSel(null)}>← Volver</button>
+      <div><div style={{...S.mono,color:'var(--green)',fontWeight:700}}>{sel.Folio||sel.Title}</div><div style={S.h1}>{sel.Proveedor}</div></div>
+      <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
+    </div>
+    <DupBanner sol={sel} sols={sols}/>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+      <div style={S.card}>
+        <div style={S.h2}>Datos de la solicitud</div>
+        <KV label="Proveedor" val={sel.Proveedor}/>
+        <KV label="RFC" val={sel.RFC_Proveedor} mono/>
+        <KV label="No. Factura / UUID" val={sel.Factura} mono/>
+        <KV label="Tipo documento" val={sel.Tipo_Documento}/>
+        <KV label="Importe" val={fmt(sel.Importe)}/>
+        <KV label="Subtotal" val={fmt(sel.Subtotal)}/>
+        <KV label="IVA" val={fmt(sel.IVA)}/>
+      </div>
+      <div style={S.card}>
+        <div style={S.h2}>Checklist CFDI</div>
+        {[
+          {k:'rfc',   l:'RFC del emisor coincide'},
+          {k:'rs',    l:'Razón social correcta'},
+          {k:'uso',   l:'Uso de CFDI válido'},
+          {k:'fecha', l:'Fecha dentro del periodo'},
+          {k:'metodo',l:'Método de pago correcto'},
+          {k:'forma', l:'Forma de pago correcta'},
+        ].map(item=><div key={item.k} onClick={()=>setCk(p=>({...p,[item.k]:!p[item.k]}))} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:'var(--radius)',background:ck[item.k]?'var(--green-bg)':'var(--bg2)',border:'1px solid '+(ck[item.k]?'var(--green)':'var(--border)'),cursor:'pointer',marginBottom:6}}>
+          <div style={{width:18,height:18,borderRadius:4,border:'1.5px solid '+(ck[item.k]?'var(--green)':'var(--border2)'),background:ck[item.k]?'var(--green)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            {ck[item.k]&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+          <span style={{fontSize:13}}>{item.l}</span>
+        </div>)}
+        <div style={{marginTop:10}}>
+          <label style={S.lbl}>Notas de contabilidad</label>
+          <textarea style={{...S.inp,minHeight:60,resize:'vertical'}} value={ck.notas} onChange={e=>setCk(p=>({...p,notas:e.target.value}))} placeholder="Observaciones…"/>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:14}}>
+          <button style={{...S.btnR,flex:1}} onClick={()=>validar(false)} disabled={saving}>✕ Rechazar</button>
+          <button style={{...S.btnP,flex:1,opacity:allOk?1:0.5}} onClick={()=>allOk&&validar(true)} disabled={saving||!allOk}>{allOk?'✓ Validar CFDI →':'Completa checklist'}</button>
+        </div>
+      </div>
+    </div>
+  </div>;
+
+  return <div>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+      <div><div style={S.h1}>Contabilidad</div><div style={{fontSize:13,color:'var(--text2)'}}>{sols.length} solicitudes por validar</div></div>
+      <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+    {sols.length===0
+      ?<div style={{...S.card,textAlign:'center',padding:40,color:'var(--text3)'}}><div style={{fontSize:28,marginBottom:8}}>🔍</div>Sin solicitudes pendientes de validar</div>
+      :<div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Folio','Proveedor','Tipo Doc.','Importe','Status'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{sols.map(x=><tr key={x.Id} onClick={()=>{setSel(x);setCk({rfc:false,rs:false,uso:false,fecha:false,metodo:false,forma:false,notas:''}); }} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
+            <td style={S.td}><div style={{fontWeight:500}}>{x.Proveedor}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.RFC_Proveedor}</div></td>
+            <td style={S.td}><Badge val={x.Tipo_Documento||'Factura'} map={{Factura:{bg:'#E6F4EF',c:'#0A5C43'},Cotización:{bg:'#FEF3E2',c:'#7A3F00'},Otro:{bg:'#EEF2F7',c:'#1E3555'}}}/></td>
+            <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
+            <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    }
+  </div>;
+}
+
+
+// ── MÓDULO CATÁLOGOS ──────────────────────────────────────────────
+function ModCatalogos({user,onBack,pop}){
+  const [tab,setTab]=useState('proveedores');
+  const [provs,setProvs]=useState([]);
+  const [razones,setRazones]=useState([]);
+  const [cats,setCats]=useState([]);
+  const [areas,setAreas]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [form,setForm]=useState(null);
+  const [tipo,setTipo]=useState('');
+  const [newItem,setNewItem]=useState('');
+  const [saving,setSaving]=useState(false);
+
+  useEffect(()=>{
+    Promise.all([spGet('Proveedores'),spGet('Razones'),spGet('Catalogo_Cats'),spGet('Catalogo_Areas')])
+    .then(([p,r,c,a])=>{
+      setProvs(p);setRazones(r);
+      setCats(c.map(x=>x.Nombre||x.Title));
+      setAreas(a.map(x=>x.Nombre||x.Title));
+      setLoading(false);
+    }).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  const FORM0_PROV={Title:'',RFC:'',CLABE:'',Banco:'',Contacto:'',Clave:''};
+  const FORM0_RAZ={Title:'',RFC:''};
+  const sf=p=>setForm(prev=>({...prev,...p}));
+
+  async function saveProv(){
+    if(!form.Title){pop('El nombre es requerido','err');return;}
+    setSaving(true);
+    try{
+      if(form.Id){ await spPatch('Proveedores',form.Id,form); setProvs(prev=>prev.map(x=>x.Id===form.Id?{...x,...form}:x)); }
+      else{ const created=await spPost('Proveedores',form); setProvs(prev=>[...prev,created]); }
+      setForm(null);pop('✓ Proveedor guardado');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  async function saveRaz(){
+    if(!form.Title){pop('El nombre es requerido','err');return;}
+    setSaving(true);
+    try{
+      if(form.Id){ await spPatch('Razones',form.Id,form); setRazones(prev=>prev.map(x=>x.Id===form.Id?{...x,...form}:x)); }
+      else{ const created=await spPost('Razones',form); setRazones(prev=>[...prev,created]); }
+      setForm(null);pop('✓ Razón social guardada');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  async function addCatArea(lista,setLista,spList){
+    if(!newItem.trim()){pop('Escribe el nombre','err');return;}
+    setSaving(true);
+    try{
+      await spPost(spList,{Title:newItem.trim(),Nombre:newItem.trim()});
+      setLista(prev=>[...prev,newItem.trim()]);
+      setNewItem('');pop('✓ Agregado');
+    }catch(e){pop('Error: '+e.message,'err');}
+    setSaving(false);
+  }
+
+  const tabs=[{id:'proveedores',l:'Proveedores'},{id:'razones',l:'Razones sociales'},{id:'categorias',l:'Categorías'},{id:'areas',l:'Áreas'}];
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}>Cargando catálogos…</div>;
+
+  return <div className="fade-in">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+      <div style={S.h1}>Catálogos</div>
+      <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+    <div style={{display:'flex',gap:4,borderBottom:'1px solid var(--border)',marginBottom:16}}>
+      {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'9px 16px',border:'none',borderBottom:tab===t.id?'2px solid var(--green)':'2px solid transparent',background:'transparent',cursor:'pointer',fontSize:13,fontWeight:tab===t.id?600:400,color:tab===t.id?'var(--green)':'var(--text2)',marginBottom:-1}}>{t.l}</button>)}
+    </div>
+
+    {tab==='proveedores'&&<div>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+        <button style={S.btnP} onClick={()=>{setForm({...FORM0_PROV});setTipo('prov');}}>+ Nuevo proveedor</button>
+      </div>
+      <div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Nombre','RFC','Banco','CLABE',''].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{provs.map(p=><tr key={p.Id} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={S.td}><div style={{fontWeight:500}}>{p.Title||p.Nombre}</div>{p.Clave&&<span style={{fontSize:10,fontFamily:'monospace',background:'var(--green-bg)',color:'var(--green)',padding:'1px 6px',borderRadius:10}}>{p.Clave}</span>}</td>
+            <td style={{...S.td,...S.mono}}>{p.RFC||'—'}</td>
+            <td style={S.td}>{p.Banco||'—'}</td>
+            <td style={{...S.td,...S.mono,fontSize:11}}>{p.CLABE?p.CLABE.slice(0,6)+'…':'—'}</td>
+            <td style={S.td}><button onClick={()=>{setForm({...FORM0_PROV,...p});setTipo('prov');}} style={{...S.btnS,fontSize:11,padding:'4px 10px'}}>✏️</button></td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    </div>}
+
+    {tab==='razones'&&<div>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+        <button style={S.btnP} onClick={()=>{setForm({...FORM0_RAZ});setTipo('raz');}}>+ Nueva razón social</button>
+      </div>
+      <div style={{...S.card,padding:0,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead><tr>{['Nombre','RFC',''].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>{razones.map(r=><tr key={r.Id} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+            <td style={S.td}><div style={{fontWeight:500}}>{r.Title||r.Nombre}</div></td>
+            <td style={{...S.td,...S.mono}}>{r.RFC||'—'}</td>
+            <td style={S.td}><button onClick={()=>{setForm({...FORM0_RAZ,...r});setTipo('raz');}} style={{...S.btnS,fontSize:11,padding:'4px 10px'}}>✏️</button></td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    </div>}
+
+    {(tab==='categorias'||tab==='areas')&&<div style={S.card}>
+      <div style={S.h2}>{tab==='categorias'?'Categorías de gasto':'Áreas'}</div>
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        <input style={{...S.inp,flex:1}} placeholder={tab==='categorias'?'Nueva categoría…':'Nueva área…'} value={newItem} onChange={e=>setNewItem(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCatArea(tab==='categorias'?cats:areas,tab==='categorias'?setCats:setAreas,tab==='categorias'?'Catalogo_Cats':'Catalogo_Areas')}/>
+        <button style={S.btnP} disabled={saving} onClick={()=>addCatArea(tab==='categorias'?cats:areas,tab==='categorias'?setCats:setAreas,tab==='categorias'?'Catalogo_Cats':'Catalogo_Areas')}>+ Agregar</button>
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+        {(tab==='categorias'?cats:areas).map((item,i)=><div key={i} style={{padding:'6px 12px',background:'var(--bg2)',borderRadius:20,border:'1px solid var(--border)',fontSize:13}}>{item}</div>)}
+      </div>
+    </div>}
+
+    {form&&<Modal onClose={()=>setForm(null)} maxW={480}>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:16}}>{tipo==='prov'?(form.Id?'Editar proveedor':'Nuevo proveedor'):(form.Id?'Editar razón social':'Nueva razón social')}</div>
+      <div style={{display:'grid',gap:12}}>
+        <div><Lbl req>Nombre</Lbl><input style={S.inp} value={form.Title||''} onChange={e=>sf({Title:e.target.value})}/></div>
+        <div><Lbl>RFC</Lbl><input style={S.inp} placeholder="RFC" value={form.RFC||''} onChange={e=>sf({RFC:e.target.value.toUpperCase()})}/></div>
+        {tipo==='prov'&&<>
+          <div><Lbl>CLABE</Lbl><input style={S.inp} placeholder="18 dígitos" value={form.CLABE||''} onChange={e=>sf({CLABE:e.target.value})}/></div>
+          <div><Lbl>Banco</Lbl><input style={S.inp} placeholder="BBVA, BANAMEX…" value={form.Banco||''} onChange={e=>sf({Banco:e.target.value})}/></div>
+          <div><Lbl>Contacto</Lbl><input style={S.inp} placeholder="Nombre o email" value={form.Contacto||''} onChange={e=>sf({Contacto:e.target.value})}/></div>
+        </>}
+        <div style={{display:'flex',gap:10,marginTop:4}}>
+          <button style={{...S.btnS,flex:1}} onClick={()=>setForm(null)}>Cancelar</button>
+          <button style={{...S.btnP,flex:1}} disabled={saving} onClick={tipo==='prov'?saveProv:saveRaz}>{saving?'Guardando…':'Guardar →'}</button>
+        </div>
+      </div>
+    </Modal>}
+  </div>;
+}
+
+
+// ── DASHBOARD EJECUTIVO ───────────────────────────────────────────
+function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
+  const [sols,setSols]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [periodo,setPeriodo]=useState('mes');
+  const [filtros,setFiltros]=useState({razon:'',status:'',area:'',cc:'',desde:'',hasta:''});
+  const ff=p=>setFiltros(prev=>({...prev,...p}));
+
+  useEffect(()=>{
+    spGet('Solicitudes','',2000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+  },[]);
+
+  // ── Periodo filter ───────────────────────────────────────────
+  function enPeriodo(sol){
+    const f=sol.Fecha_Requerida||sol.Created||'';
+    const hoy=new Date(); const fd=new Date(f);
+    if(periodo==='hoy') return f.startsWith(new Date().toISOString().split('T')[0]);
+    if(periodo==='semana'){const s=new Date(hoy);s.setDate(hoy.getDate()-7);return fd>=s;}
+    if(periodo==='mes'){const s=new Date(hoy);s.setMonth(hoy.getMonth()-1);return fd>=s;}
+    if(periodo==='anio'){const s=new Date(hoy);s.setFullYear(hoy.getFullYear()-1);return fd>=s;}
+    if(periodo==='custom'){
+      if(filtros.desde&&f<filtros.desde) return false;
+      if(filtros.hasta&&f>filtros.hasta) return false;
+      return true;
+    }
+    return true;
+  }
+
+  const solsFiltradas=sols.filter(s=>{
+    if(!enPeriodo(s)) return false;
+    if(filtros.razon&&s.Razon_Social!==filtros.razon) return false;
+    if(filtros.status&&s.Status!==filtros.status) return false;
+    if(filtros.area&&s.Area!==filtros.area) return false;
+    if(filtros.cc&&s.Centro_Costo!==filtros.cc) return false;
+    return true;
+  });
+
+  const hoyStr=new Date().toISOString().split('T')[0];
+  const solsHoy=sols.filter(s=>(s.Fecha_Requerida||'').startsWith(hoyStr)||s.Status==='Capturado');
+  const mesStr=new Date().toISOString().slice(0,7);
+  const solsMes=sols.filter(s=>(s.Fecha_Requerida||s.Created||'').startsWith(mesStr)&&s.Status==='Pagado');
+
+  // ── KPIs ────────────────────────────────────────────────────
+  const kpis=[
+    {l:'Solicitudes hoy',  n:solsHoy.length, v:solsHoy.reduce((a,x)=>a+(+x.Importe||0),0), bg:'#EAF0FA',c:'#1A56A4',icon:'📅'},
+    {l:'Pendientes revisión',n:sols.filter(x=>['Capturado','En revisión contable','En revisión financiera'].includes(x.Status)).length, v:sols.filter(x=>['Capturado','En revisión contable','En revisión financiera'].includes(x.Status)).reduce((a,x)=>a+(+x.Importe||0),0), bg:'#FEF3E2',c:'#C06C0A',icon:'⏳'},
+    {l:'Programadas',       n:sols.filter(x=>x.Status==='Programado').length, v:sols.filter(x=>x.Status==='Programado').reduce((a,x)=>a+(+x.Importe||0),0), bg:'#EEF2F7',c:'#3D5A80',icon:'📆'},
+    {l:'Pagadas del mes',   n:solsMes.length, v:solsMes.reduce((a,x)=>a+(+x.Importe||0),0), bg:'#E6F4EF',c:'#0F8A65',icon:'✅'},
+  ];
+
+  // ── Agrupadores ──────────────────────────────────────────────
+  function agrupar(arr,key,top=8){
+    const map={};
+    arr.forEach(x=>{const k=x[key]||'Sin especificar';if(!map[k])map[k]={l:k,v:0,n:0};map[k].v+=(+x.Importe||0);map[k].n++;});
+    return Object.values(map).sort((a,b)=>b.v-a.v).slice(0,top);
+  }
+
+  const COLS=['#0F8A65','#1A56A4','#6D3AB5','#C06C0A','#C8251F','#3D5A80','#059669','#7C3AED','#B45309','#DC2626'];
+
+  // ── Bar chart ────────────────────────────────────────────────
+  function BarChart({data,title,col}){
+    if(!data||!data.length) return <div style={{...S.card,textAlign:'center',padding:24,color:'var(--text3)',fontSize:12}}>Sin datos</div>;
+    const max=Math.max(...data.map(d=>d.v),1);
+    return <div style={S.card}>
+      <div style={S.h2}>{title}</div>
+      {data.map((d,i)=><div key={d.l} style={{marginBottom:10}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}}>
+          <span style={{fontWeight:500,maxWidth:'55%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.l}</span>
+          <span style={{fontFamily:'monospace',fontWeight:700,color:col||COLS[i%COLS.length]}}>{fmt(d.v)}</span>
+        </div>
+        <div style={{height:7,borderRadius:4,background:'var(--bg3)'}}>
+          <div style={{height:'100%',borderRadius:4,background:col||COLS[i%COLS.length],width:(d.v/max*100)+'%',transition:'width .6s ease'}}/>
+        </div>
+        <div style={{fontSize:10,color:'var(--text3)',marginTop:1}}>{d.n} solicitud{d.n!==1?'es':''}</div>
+      </div>)}
+    </div>;
+  }
+
+  // ── Donut chart ──────────────────────────────────────────────
+  function DonutChart({data,title}){
+    if(!data||!data.length) return null;
+    const total=data.reduce((a,d)=>a+d.v,0)||1;
+    let cumAngle=-Math.PI/2;
+    const cx=80,cy=80,r=60,inner=35;
+    const paths=data.map((d,i)=>{
+      const angle=(d.v/total)*Math.PI*2;
+      const x1=cx+r*Math.cos(cumAngle),y1=cy+r*Math.sin(cumAngle);
+      cumAngle+=angle;
+      const x2=cx+r*Math.cos(cumAngle),y2=cy+r*Math.sin(cumAngle);
+      const xi1=cx+inner*Math.cos(cumAngle-angle),yi1=cy+inner*Math.sin(cumAngle-angle);
+      const xi2=cx+inner*Math.cos(cumAngle),yi2=cy+inner*Math.sin(cumAngle);
+      const lg=angle>Math.PI?1:0;
+      return {path:`M${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} L${xi2},${yi2} A${inner},${inner} 0 ${lg},0 ${xi1},${yi1} Z`,col:COLS[i%COLS.length],d};
+    });
+    return <div style={S.card}>
+      <div style={S.h2}>{title}</div>
+      <div style={{display:'flex',alignItems:'center',gap:16}}>
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          {paths.map((p,i)=><path key={i} d={p.path} fill={p.col} opacity=".9"/>)}
+          <text x="80" y="76" textAnchor="middle" fontSize="11" fill="var(--text2)">Total</text>
+          <text x="80" y="92" textAnchor="middle" fontSize="12" fontWeight="bold" fill="var(--text)">{sols.length}</text>
+        </svg>
+        <div style={{flex:1}}>
+          {paths.map((p,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              <div style={{width:10,height:10,borderRadius:2,background:p.col,flexShrink:0}}/>
+              <span style={{fontSize:11,color:'var(--text2)'}}>{p.d.l}</span>
+            </div>
+            <span style={{fontSize:11,fontWeight:600,fontFamily:'monospace',color:p.col}}>{p.d.n}</span>
+          </div>)}
+        </div>
+      </div>
+    </div>;
+  }
+
+  // ── Funnel ───────────────────────────────────────────────────
+  function FunnelChart(){
+    const steps=[
+      {l:'Capturadas',   st:['Capturado']},
+      {l:'En contabilidad', st:['En revisión contable','Rechazado por contabilidad','Autorizado por contabilidad']},
+      {l:'En finanzas',  st:['En revisión financiera']},
+      {l:'Programadas',  st:['Programado']},
+      {l:'Pagadas',      st:['Pagado']},
+    ];
+    const data=steps.map(s=>({...s,n:sols.filter(x=>s.st.includes(x.Status)).length,v:sols.filter(x=>s.st.includes(x.Status)).reduce((a,x)=>a+(+x.Importe||0),0)}));
+    const maxN=Math.max(...data.map(d=>d.n),1);
+    return <div style={S.card}>
+      <div style={S.h2}>Flujo de autorización — dónde se atoran las solicitudes</div>
+      {data.map((d,i)=><div key={d.l} style={{marginBottom:8}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}}>
+          <span style={{fontWeight:600,color:COLS[i]}}>{d.l}</span>
+          <div style={{display:'flex',gap:12}}>
+            <span style={{fontWeight:700,color:COLS[i]}}>{d.n} sol.</span>
+            <span style={{fontFamily:'monospace',color:'var(--text2)'}}>{fmt(d.v)}</span>
+          </div>
+        </div>
+        <div style={{height:10,borderRadius:4,background:'var(--bg3)'}}>
+          <div style={{height:'100%',borderRadius:4,background:COLS[i],width:(d.n/maxN*100)+'%',transition:'width .6s ease'}}/>
+        </div>
+        {i<data.length-1&&d.n>0&&data[i+1].n<d.n&&<div style={{fontSize:10,color:'var(--orange)',textAlign:'right',marginTop:2}}>▼ {d.n-data[i+1].n} se detuvieron aquí</div>}
+      </div>)}
+    </div>;
+  }
+
+  // ── Pagado vs Pendiente ──────────────────────────────────────
+  function PagoVsPendiente(){
+    const pagado=sols.filter(x=>x.Status==='Pagado').reduce((a,x)=>a+(+x.Importe||0),0);
+    const pendiente=sols.filter(x=>!['Pagado','Cancelado','Rechazado','Rechazado por contabilidad'].includes(x.Status)).reduce((a,x)=>a+(+x.Importe||0),0);
+    const programado=sols.filter(x=>x.Status==='Programado').reduce((a,x)=>a+(+x.Importe||0),0);
+    const total=pagado+pendiente||1;
+    return <div style={S.card}>
+      <div style={S.h2}>Pagado vs Pendiente</div>
+      <div style={{display:'flex',height:20,borderRadius:10,overflow:'hidden',marginBottom:16}}>
+        <div style={{width:(pagado/total*100)+'%',background:'#0F8A65',transition:'width .6s'}}/>
+        <div style={{width:(programado/total*100)+'%',background:'#1A56A4',transition:'width .6s'}}/>
+        <div style={{width:((pendiente-programado)/total*100)+'%',background:'#FEF3E2',borderLeft:'2px solid #C06C0A',transition:'width .6s'}}/>
+      </div>
+      {[{l:'Pagado',v:pagado,c:'#0F8A65',bg:'#E6F4EF'},{l:'Programado',v:programado,c:'#1A56A4',bg:'#EAF0FA'},{l:'Pendiente de pagar',v:pendiente,c:'#C06C0A',bg:'#FEF3E2'}].map(x=><div key={x.l} style={{display:'flex',justifyContent:'space-between',padding:'8px 12px',background:x.bg,borderRadius:'var(--radius)',marginBottom:6}}>
+        <span style={{fontSize:12,fontWeight:600,color:x.c}}>{x.l}</span>
+        <span style={{fontFamily:'monospace',fontWeight:700,color:x.c}}>{fmt(x.v)}</span>
+      </div>)}
+    </div>;
+  }
+
+  // ── Status donut data ────────────────────────────────────────
+  const statusData=STATUS_OPTS.map(st=>({l:st,v:solsFiltradas.filter(x=>x.Status===st).length})).filter(d=>d.v>0);
+
+  // ── Bandeja prioritaria ──────────────────────────────────────
+  const bandejaHoy=[...solsHoy].sort((a,b)=>{
+    const pi=['Alta','Media','Baja'];
+    const pd=pi.indexOf(a.Prioridad||'Media')-pi.indexOf(b.Prioridad||'Media');
+    if(pd!==0) return pd;
+    return (a.Fecha_Requerida||'').localeCompare(b.Fecha_Requerida||'');
+  }).slice(0,10);
+
+  const razones=[...new Set(sols.map(x=>x.Razon_Social).filter(Boolean))];
+  const areas=[...new Set(sols.map(x=>x.Area).filter(Boolean))];
+  const centros=[...new Set(sols.map(x=>x.Centro_Costo).filter(Boolean))];
+
+  if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}><div style={{fontSize:32,marginBottom:12}}>📊</div>Cargando dashboard…</div>;
+
+  return <div className="fade-in">
+    {/* Header */}
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:10}}>
+      <div>
+        <div style={S.h1}>Dashboard Ejecutivo</div>
+        <div style={{fontSize:12,color:'var(--text2)'}}>{solsFiltradas.length} solicitudes en el periodo seleccionado</div>
+      </div>
+      {onBack&&<button style={S.btnS} onClick={onBack}>← Portal</button>}
+    </div>
+
+    {/* Filtros globales */}
+    <div style={{...S.card,padding:'12px 16px',marginBottom:16,background:'var(--bg2)'}}>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'flex-end'}}>
+        <div>
+          <label style={S.lbl}>Periodo</label>
+          <div style={{display:'flex',gap:4}}>
+            {[{id:'hoy',l:'Hoy'},{id:'semana',l:'Semana'},{id:'mes',l:'Mes'},{id:'anio',l:'Año'},{id:'custom',l:'Custom'}].map(p=><button key={p.id} onClick={()=>setPeriodo(p.id)} style={{padding:'5px 10px',borderRadius:20,border:'1px solid '+(periodo===p.id?'var(--green)':'var(--border)'),background:periodo===p.id?'var(--green)':'transparent',color:periodo===p.id?'white':'var(--text2)',fontSize:11,fontWeight:periodo===p.id?600:400,cursor:'pointer'}}>{p.l}</button>)}
+          </div>
+        </div>
+        {periodo==='custom'&&<>
+          <div><label style={S.lbl}>Desde</label><input type="date" style={{...S.inp,width:130}} value={filtros.desde} onChange={e=>ff({desde:e.target.value})}/></div>
+          <div><label style={S.lbl}>Hasta</label><input type="date" style={{...S.inp,width:130}} value={filtros.hasta} onChange={e=>ff({hasta:e.target.value})}/></div>
+        </>}
+        <div><label style={S.lbl}>Razón social</label>
+          <select style={{...S.sel,width:150}} value={filtros.razon} onChange={e=>ff({razon:e.target.value})}>
+            <option value="">Todas</option>{razones.map(r=><option key={r}>{r}</option>)}
+          </select>
+        </div>
+        <div><label style={S.lbl}>Área</label>
+          <select style={{...S.sel,width:130}} value={filtros.area} onChange={e=>ff({area:e.target.value})}>
+            <option value="">Todas</option>{areas.map(a=><option key={a}>{a}</option>)}
+          </select>
+        </div>
+        <div><label style={S.lbl}>Centro de costo</label>
+          <select style={{...S.sel,width:140}} value={filtros.cc} onChange={e=>ff({cc:e.target.value})}>
+            <option value="">Todos</option>{centros.map(cc=><option key={cc}>{cc}</option>)}
+          </select>
+        </div>
+        <div><label style={S.lbl}>Status</label>
+          <select style={{...S.sel,width:160}} value={filtros.status} onChange={e=>ff({status:e.target.value})}>
+            <option value="">Todos</option>{STATUS_OPTS.map(s=><option key={s}>{s}</option>)}
+          </select>
+        </div>
+        {(filtros.razon||filtros.area||filtros.cc||filtros.status)&&
+          <button style={{...S.btnS,fontSize:11,alignSelf:'flex-end'}} onClick={()=>setFiltros({razon:'',status:'',area:'',cc:'',desde:'',hasta:''})}>× Limpiar</button>}
+      </div>
+    </div>
+
+    {/* KPIs */}
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
+      {kpis.map(k=><div key={k.l} style={{background:k.bg,borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:k.c,letterSpacing:'.06em',lineHeight:1.4,maxWidth:'70%'}}>{k.l}</div>
+          <span style={{fontSize:18}}>{k.icon}</span>
+        </div>
+        <div style={{fontSize:22,fontWeight:700,color:k.c,fontFamily:'monospace',marginTop:6}}>{k.n}</div>
+        <div style={{fontSize:12,fontFamily:'monospace',color:k.c,opacity:.8,marginTop:2}}>{fmt(k.v)}</div>
+      </div>)}
+    </div>
+
+    {/* Bandeja prioritaria */}
+    {bandejaHoy.length>0&&<div style={{...S.card,padding:0,overflow:'hidden',marginBottom:16}}>
+      <div style={{padding:'10px 16px',background:'var(--bg2)',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div style={{fontWeight:700,fontSize:13}}>📋 Bandeja prioritaria — hoy</div>
+        <span style={{fontSize:11,color:'var(--text3)'}}>{bandejaHoy.length} solicitudes</span>
+      </div>
+      <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <thead><tr>{['Prior.','Folio','Proveedor','Área','Centro','Importe','Status','Fecha req.'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+        <tbody>{bandejaHoy.map(x=><tr key={x.Id} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+          <td style={S.td}><Badge val={x.Prioridad||'Media'} map={PR_COL}/></td>
+          <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
+          <td style={S.td}><div style={{fontWeight:500,fontSize:13}}>{x.Proveedor}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
+          <td style={S.td}><div style={{fontSize:12}}>{x.Area}</div></td>
+          <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{x.Centro_Costo||'—'}</td>
+          <td style={{...S.td,fontFamily:'monospace',fontWeight:700}}>{fmt(x.Importe)}</td>
+          <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
+          <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>}
+
+    {/* Gráficas fila 1 */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <BarChart data={agrupar(solsFiltradas,'Area')} title="Gastos por área" col={null}/>
+      <BarChart data={agrupar(solsFiltradas,'Razon_Social')} title="Gastos por razón social" col="#1A56A4"/>
+    </div>
+
+    {/* Gráficas fila 2 */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <BarChart data={agrupar(solsFiltradas,'Categoria')} title="Gastos por categoría" col="#6D3AB5"/>
+      <DonutChart data={statusData} title="Status de solicitudes"/>
+    </div>
+
+    {/* Gráficas fila 3 */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <PagoVsPendiente/>
+      <BarChart data={agrupar(solsFiltradas,'Proveedor',10)} title="Top 10 proveedores" col="#C06C0A"/>
+    </div>
+
+    {/* Fila 4 */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      <BarChart data={agrupar(solsFiltradas.filter(x=>x.Centro_Costo),'Centro_Costo',10)} title="Gastos por centro de costo / sucursal" col="#3D5A80"/>
+      <FunnelChart/>
+    </div>
+  </div>;
+}
+
+
 // ── PORTAL INICIO ─────────────────────────────────────────────────
 const MODS_DEF=[
   {id:'solicitudes', icon:'📋', titulo:'Solicitudes',  desc:'Crea y da seguimiento a solicitudes de pago.', color:'#0F8A65', bg:'#E6F4EF'},
@@ -972,6 +1638,7 @@ const MODS_DEF=[
   {id:'finanzas',    icon:'💼', titulo:'Finanzas',     desc:'Dashboard, pagos y flujo de caja.',            color:'#C06C0A', bg:'#FEF3E2'},
   {id:'catalogos',   icon:'🗂️', titulo:'Catálogos',    desc:'Proveedores, razones sociales y categorías.',  color:'#3D5A80', bg:'#EEF2F7'},
   {id:'usuarios',    icon:'👥', titulo:'Usuarios',     desc:'Gestiona accesos y roles del portal.',          color:'#6D3AB5', bg:'#F0EAFA'},
+  {id:'dashboard',    icon:'📊', titulo:'Reportes',     desc:'Solicitudes del día, por periodo y gráficas de gasto.', color:'#1A56A4', bg:'#EAF0FA'},
   {id:'bitacora',    icon:'📒', titulo:'Bitácora',     desc:'Historial de acciones y cambios en el portal.', color:'#0F8A65', bg:'#E6F4EF'},
 ];
 
@@ -1034,6 +1701,7 @@ function App(){
       setRolInfo({Rol:'Administrador', Correo:DEMO_USER.mail});
       setPendientes(2);
       setAuthState('app');
+      setModulo('dashboard'); // Dashboard as default for demo
       return;
     }
     msalInstance.initialize().then(()=>{
@@ -1065,6 +1733,8 @@ function App(){
       if(found&&found.Activo!==false){
         setRolInfo(found);
         logBitacora(profile.displayName||profile.mail,'Inició sesión',profile.mail,'Login');
+        // Set default module based on role
+        if(['Administrador','Finanzas','Contador'].includes(found.Rol)) setModulo('dashboard');
         // Count pending approvals
         const sols=await spGet('Solicitudes','Status eq \'Capturado\'',100);
         setPendientes(sols.length);
@@ -1121,6 +1791,9 @@ function App(){
     {modulo==='solicitudes'&&ROLES_MODS[rol]?.includes('solicitudes')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModSolicitudes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='aprobaciones'&&ROLES_MODS[rol]?.includes('aprobaciones')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModAprobaciones user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='finanzas'&&ROLES_MODS[rol]?.includes('finanzas')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModFinanzas user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='dashboard'&&ROLES_MODS[rol]?.includes('dashboard')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModReportes user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='contabilidad'&&ROLES_MODS[rol]?.includes('contabilidad')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModContabilidad user={user} rol={rol} onBack={()=>setModulo(null)} pop={pop}/></div>}
+    {modulo==='catalogos'&&ROLES_MODS[rol]?.includes('catalogos')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModCatalogos user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='usuarios'&&ROLES_MODS[rol]?.includes('usuarios')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModUsuarios user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
     {modulo==='bitacora'&&ROLES_MODS[rol]?.includes('bitacora')&&<div style={{minHeight:'100vh',background:'var(--bg3)',padding:'24px 28px'}}><ModBitacora user={user} onBack={()=>setModulo(null)} pop={pop}/></div>}
     <Toast t={toast}/>
