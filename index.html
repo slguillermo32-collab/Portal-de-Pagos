@@ -59,10 +59,10 @@ const DEMO_DATA = {
     {Id:4, Correo:'solicitante@fyttsa.com', Rol:'Solicitante', Activo:true, Title:'Ana Martínez'},
   ],
   solicitudes: [
-    {Id:1, Folio:'SOL-2025-0001', Razon_Social:'Guimar', Proveedor:'Ferretería Industrial SA', RFC_Proveedor:'FIS890101ABC', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'A-00123', Tipo_Documento:'Factura', Importe:85000, Subtotal:73275.86, IVA:11724.14, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-10', Status:'Capturado', Notas:'Urgente para continuar obra', Solicitante:'Ana Martínez'},
+    {Id:1, Folio:'SOL-2025-0001', Created:'2025-06-07T09:00:00', Fecha_Captura:'2025-06-07T09:00:00', Razon_Social:'Guimar', Proveedor:'Ferretería Industrial SA', RFC_Proveedor:'FIS890101ABC', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'A-00123', Tipo_Documento:'Factura', Importe:85000, Subtotal:73275.86, IVA:11724.14, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-10', Status:'Capturado', Notas:'Urgente para continuar obra', Solicitante:'Ana Martínez'},
     {Id:2, Folio:'SOL-2025-0002', Fecha_Aprobacion:'2025-06-07T10:30:00', Fecha_Validacion:'2025-06-07T14:00:00', Razon_Social:'Guimar', Centro_Costo:'Totolcingo', Proveedor:'Concretos del Norte', RFC_Proveedor:'CNO920315XYZ', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Materiales de construcción', Centro_Costo:'Obra Torre Norte', Factura:'B-00456', Tipo_Documento:'Factura', Importe:42000, Subtotal:36206.90, IVA:5793.10, Metodo_Pago:'Transferencia', Prioridad:'Media', Fecha_Requerida:'2025-06-15', Status:'Autorizado por contabilidad', Notas:'', Solicitante:'Ana Martínez'},
-    {Id:3, Folio:'SOL-2025-0003', Proveedor:'Servicios Eléctricos MX', RFC_Proveedor:'SEM010101DEF', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Instalaciones especiales', Centro_Costo:'Obra Bodega Sur', Factura:'COT-2025-0001', Tipo_Documento:'Cotización', Importe:28500, Subtotal:24568.97, IVA:3931.03, Metodo_Pago:'Transferencia', Prioridad:'Baja', Fecha_Requerida:'2025-06-20', Status:'En revisión contable', Notas:'Cotización previa al trabajo', Solicitante:'Guillermo Sánchez'},
-    {Id:6, Folio:'SOL-2025-0006', Proveedor:'Constructores Asociados SA', RFC_Proveedor:'CAS001122GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Servicios de construcción', Centro_Costo:'Obra Torre Norte', Factura:'E-00654', Tipo_Documento:'Factura', Importe:120000, Subtotal:103448.28, IVA:16551.72, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-09', Status:'En revisión contable', Notas:'Pago por avance de obra', Solicitante:'Ana Martínez'},
+    {Id:3, Folio:'SOL-2025-0003', Created:'2025-06-06T11:00:00', Fecha_Captura:'2025-06-06T11:00:00', Proveedor:'Servicios Eléctricos MX', RFC_Proveedor:'SEM010101DEF', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Instalaciones especiales', Centro_Costo:'Obra Bodega Sur', Factura:'COT-2025-0001', Tipo_Documento:'Cotización', Importe:28500, Subtotal:24568.97, IVA:3931.03, Metodo_Pago:'Transferencia', Prioridad:'Baja', Fecha_Requerida:'2025-06-20', Status:'En revisión contable', Notas:'Cotización previa al trabajo', Solicitante:'Guillermo Sánchez'},
+    {Id:6, Folio:'SOL-2025-0006', Created:'2025-06-06T09:00:00', Fecha_Captura:'2025-06-06T09:00:00', Proveedor:'Constructores Asociados SA', RFC_Proveedor:'CAS001122GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Construcción', Categoria:'Servicios de construcción', Centro_Costo:'Obra Torre Norte', Factura:'E-00654', Tipo_Documento:'Factura', Importe:120000, Subtotal:103448.28, IVA:16551.72, Metodo_Pago:'Transferencia', Prioridad:'Alta', Fecha_Requerida:'2025-06-09', Status:'En revisión contable', Notas:'Pago por avance de obra', Solicitante:'Ana Martínez'},
     {Id:4, Folio:'SOL-2025-0004', Fecha_Captura:'2025-06-05T09:00:00', Fecha_Aprobacion:'2025-06-05T11:00:00', Fecha_Validacion:'2025-06-05T15:00:00', Fecha_Programado:'2025-06-06T10:00:00', Razon_Social:'Cider', Centro_Costo:'Matriz', Proveedor:'Transportes Rápidos SA', RFC_Proveedor:'TRS950601GHI', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Operaciones', Categoria:'Mantenimiento vehicular', Centro_Costo:'Administración', Factura:'C-00789', Tipo_Documento:'Factura', Importe:15200, Subtotal:13103.45, IVA:2096.55, Metodo_Pago:'Tarjeta empresarial', Prioridad:'Media', Fecha_Requerida:'2025-06-08', Status:'Programado', Fecha_Programada:'2025-06-08', Notas:'', Solicitante:'Carlos López'},
     {Id:5, Folio:'SOL-2025-0005', Fecha_Captura:'2025-06-01T09:00:00', Fecha_Aprobacion:'2025-06-01T11:00:00', Fecha_Validacion:'2025-06-02T10:00:00', Fecha_Programado:'2025-06-03T09:00:00', Fecha_Pago:'2025-06-05', Proveedor:'Papelería y Oficinas SA', RFC_Proveedor:'POS880901JKL', Razon_Social:'Constructora FYTTSA SA de CV', Area:'Administración', Categoria:'Papelería y consumibles admon.', Centro_Costo:'Administración', Factura:'D-00321', Tipo_Documento:'Factura', Importe:3800, Subtotal:3275.86, IVA:524.14, Metodo_Pago:'Efectivo', Prioridad:'Baja', Fecha_Requerida:'2025-06-12', Status:'Pagado', Fecha_Pago:'2025-06-05', Notas:'', Solicitante:'Ana Martínez'},
   ],
@@ -283,6 +283,12 @@ function genFolio(list) {
   const n  = (list||[]).length + 1;
   return 'SOL-' + yr + '-' + String(n).padStart(4,'0');
 }
+
+const iAj = function(s){
+  var mp = parseFloat(s.Monto_Pagar||s.montoPagar||0);
+  if((s.Es_Parcial||s.Es_Anticipo||s.esParcial||s.esAnticipo) && mp > 0) return mp;
+  return parseFloat(s.Importe||s.importe||0);
+};
 
 // ── ESTILOS ───────────────────────────────────────────────────────
 const S = {
@@ -710,13 +716,23 @@ function ModSolicitudes({user,rol,onBack,pop}){
       </div>
     </div>
     <DupBanner sol={sel} sols={sols}/>
-    {sel.Status==='Rechazado por contabilidad'&&sel.Motivo_Rechazo_Conta&&<div style={{padding:'14px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
-      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+    {sel.Status==='Rechazado por contabilidad'&&<div style={{padding:'14px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
         <span style={{fontSize:16}}>🔍</span>
         <span style={{fontWeight:700,fontSize:13,color:'var(--red-text)'}}>Rechazado por Contabilidad</span>
-        {sel.Checklist_Conta&&<span style={{fontSize:11,color:'var(--text3)',marginLeft:'auto'}}>{sel.Checklist_Conta}</span>}
+        {sel.Checklist_Conta&&<span style={{fontSize:11,background:'var(--red)',color:'white',padding:'2px 8px',borderRadius:10,marginLeft:'auto'}}>{sel.Checklist_Conta}</span>}
       </div>
-      <div style={{fontSize:12,color:'var(--red-text)',lineHeight:1.8}}>{sel.Motivo_Rechazo_Conta}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:sel.Motivo_Rechazo_Conta?10:0}}>
+        {[{k:'rfc',l:'RFC del emisor'},{k:'rs',l:'Razón social'},{k:'uso',l:'Uso de CFDI'},{k:'fecha',l:'Fecha del periodo'},{k:'metodo',l:'Método de pago'},{k:'forma',l:'Forma de pago'}].map(function(item){
+          var motivo=sel.Motivo_Rechazo_Conta||'';
+          var aprobado=!motivo.includes(item.l);
+          return <div key={item.k} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',borderRadius:'var(--radius)',background:aprobado?'#dcfce7':'#fee2e2',border:'1px solid '+(aprobado?'#86efac':'#fca5a5')}}>
+            <span style={{fontSize:13}}>{aprobado?'✓':'✗'}</span>
+            <span style={{fontSize:12,fontWeight:500,color:aprobado?'#166534':'#991b1b'}}>{item.l}</span>
+          </div>;
+        })}
+      </div>
+      {sel.Motivo_Rechazo_Conta&&<div style={{fontSize:11,color:'var(--red-text)',borderTop:'1px solid #fca5a5',paddingTop:8}}>{sel.Motivo_Rechazo_Conta}</div>}
     </div>}
     {(sel.Status==='Rechazado'||sel.Status==='Rechazado por contabilidad')&&sel.Notas_Finanzas&&!sel.Motivo_Rechazo_Conta&&<div style={{padding:'12px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
       <div style={{fontWeight:700,fontSize:13,color:'var(--red-text)',marginBottom:4}}>✕ Motivo de rechazo</div>
@@ -1224,14 +1240,24 @@ function ModBitacora({user,onBack,pop}){
 // ── BANNER DE DUPLICADOS ──────────────────────────────────────────
 function DupBanner({sol, sols}){
   if(!sol||!sols) return null;
-  const dups=sols.filter(x=>
-    x.Id!==sol.Id &&
-    x.Status!=='Cancelado' &&
-    x.Status!=='Rechazado' &&
-    x.Status!=='Rechazado por contabilidad' &&
-    sol.Factura && x.Factura &&
-    x.Factura.trim().toLowerCase()===sol.Factura.trim().toLowerCase()
-  );
+  const activos=['Cancelado','Rechazado','Rechazado por contabilidad'];
+  const isUUID=function(s){return s&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());};
+  const dups=sols.filter(function(x){
+    if((x.Id||x.id)===(sol.Id||sol.id)) return false;
+    if(activos.includes(x.Status)) return false;
+    var f1=sol.Factura||''; var f2=x.Factura||'';
+    // Regla 1: UUID de CFDI idéntico
+    if(isUUID(f1)&&isUUID(f2)&&f1.toLowerCase()===f2.toLowerCase()) return true;
+    // Regla 2: Mismo proveedor + mismo importe + misma fecha requerida
+    if(sol.Proveedor&&x.Proveedor===sol.Proveedor&&
+       parseFloat(x.Importe||0)===parseFloat(sol.Importe||0)&&
+       x.Fecha_Requerida&&sol.Fecha_Requerida&&
+       x.Fecha_Requerida.slice(0,10)===sol.Fecha_Requerida.slice(0,10)) return true;
+    // Regla 3: Mismo folio de factura + mismo proveedor (solo si no es UUID)
+    if(!isUUID(f1)&&f1&&f2&&f1.trim().toLowerCase()===f2.trim().toLowerCase()&&
+       sol.Proveedor&&x.Proveedor===sol.Proveedor) return true;
+    return false;
+  });
   if(!dups.length) return null;
   return <div style={{padding:'12px 16px',background:'#FEF2F2',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:16,borderLeft:'4px solid var(--red)'}}>
     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
