@@ -457,6 +457,11 @@ function ModSolicitudes({user,rol,onBack,pop}){
     Metodo_Pago:'Transferencia',Prioridad:'Media',Fecha_Requerida:'',
     Status:'Capturado',Notas:'',Es_Anticipo:false,
     Solicitante:user.displayName||user.mail,
+    Fecha_Captura: new Date().toISOString(),
+    Es_Anticipo: false,
+    Monto_Pagar: '',
+    Padre_Folio: '',
+    _ppTab: '',
   };
 
   useEffect(()=>{
@@ -479,7 +484,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
     setSaving(true);
     try{
       const folio=form.Folio||genFolio(sols);
-      const data={...form,Folio:folio,Title:folio};
+      const data={...form,Folio:folio,Title:folio,Fecha_Captura:form.Fecha_Captura||new Date().toISOString()};
       if(sel){
         await spPatch('Solicitudes',sel.Id||sel.id,data);
         setSols(prev=>prev.map(x=>(x.Id||x.id)===(sel.Id||sel.id)?{...x,...data}:x));
@@ -547,25 +552,34 @@ function ModSolicitudes({user,rol,onBack,pop}){
         </Fld>
 
         <Fld label="Razón social (receptor)">
-          <select style={S.sel} value={form.Razon_Social} onChange={e=>sf({Razon_Social:e.target.value})}>
-            <option value="">— Selecciona —</option>
-            {razones.map(r=><option key={r.Id} value={r.Title||r.Nombre}>{r.Title||r.Nombre}</option>)}
-          </select>
-          <input style={{...S.inp,marginTop:5,fontSize:12}} placeholder="O escribe la razón social" value={form.Razon_Social} onChange={e=>sf({Razon_Social:e.target.value})}/>
+          <div style={{display:'flex',gap:6}}>
+            <select style={{...S.sel,flex:1}} value={form.Razon_Social} onChange={e=>sf({Razon_Social:e.target.value,Centro_Costo:''})}>
+              <option value="">— Selecciona —</option>
+              {razones.map(r=><option key={r.Id} value={r.Title||r.Nombre}>{r.Title||r.Nombre}</option>)}
+              <option value="__nueva__">+ Nueva razón social…</option>
+            </select>
+          </div>
+          {form.Razon_Social==='__nueva__'&&<input style={{...S.inp,marginTop:5}} autoFocus placeholder="Nombre de la razón social" onBlur={e=>{if(e.target.value.trim())sf({Razon_Social:e.target.value.trim()});}} onKeyDown={e=>{if(e.key==='Enter'&&e.target.value.trim())sf({Razon_Social:e.target.value.trim()});}}/>}
         </Fld>
 
         <Fld label="Área" req>
           <select style={S.sel} value={form.Area} onChange={e=>sf({Area:e.target.value})}>
             <option value="">— Selecciona —</option>
             {areas.map((a,i)=><option key={i} value={a}>{a}</option>)}
+            <option value="__nueva__">+ Nueva área…</option>
           </select>
+          {form.Area==='__nueva__'&&<input style={{...S.inp,marginTop:5}} autoFocus placeholder="Nombre del área" onBlur={e=>{if(e.target.value.trim())sf({Area:e.target.value.trim()});}} onKeyDown={e=>{if(e.key==='Enter'&&e.target.value.trim())sf({Area:e.target.value.trim()});}}/>}
         </Fld>
 
         <Fld label="Categoría" req>
-          <select style={S.sel} value={form.Categoria} onChange={e=>sf({Categoria:e.target.value})}>
+          <select style={S.sel} value={form.Categoria} onChange={e=>sf({Categoria:e.target.value,_catOtro:''})}>
             <option value="">— Selecciona —</option>
             {cats.map((c,i)=><option key={i} value={c}>{c}</option>)}
+            <option value="Otro">Otro</option>
+            <option value="__nueva__">+ Nueva categoría…</option>
           </select>
+          {form.Categoria==='Otro'&&<input style={{...S.inp,marginTop:5}} placeholder="Especifica la categoría" value={form._catOtro||''} onChange={e=>sf({_catOtro:e.target.value})}/>}
+          {form.Categoria==='__nueva__'&&<input style={{...S.inp,marginTop:5}} autoFocus placeholder="Nombre de la categoría" onBlur={e=>{if(e.target.value.trim())sf({Categoria:e.target.value.trim()});}} onKeyDown={e=>{if(e.key==='Enter'&&e.target.value.trim())sf({Categoria:e.target.value.trim()});}}/>}
         </Fld>
 
 <CentroCostoField razones={razones} razonSel={form.Razon_Social} value={form.Centro_Costo} onChange={v=>sf({Centro_Costo:v})}/>
@@ -599,6 +613,53 @@ function ModSolicitudes({user,rol,onBack,pop}){
             {PRIOS.map(p=><option key={p}>{p}</option>)}
           </select>
         </Fld>
+
+        {/* ── Pago parcial / anticipo ── */}
+        <div style={{gridColumn:'span 2'}}>
+          <div onClick={()=>sf({_ppTab:form._ppTab?'':'anticipo',Es_Anticipo:!form._ppTab,Monto_Pagar:'',Padre_Folio:''})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:'var(--radius)',border:'1px solid '+(form._ppTab?'var(--purple)':'var(--border)'),background:form._ppTab?'var(--purple-bg)':'var(--bg2)',cursor:'pointer',userSelect:'none'}}>
+            <div style={{width:18,height:18,borderRadius:4,border:'1.5px solid '+(form._ppTab?'var(--purple)':'var(--border2)'),background:form._ppTab?'var(--purple)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              {form._ppTab&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+            <span style={{fontSize:13,fontWeight:500}}>Este pago es un anticipo o pago parcial</span>
+          </div>
+          {form._ppTab&&<div style={{marginTop:8,padding:'16px',borderRadius:'var(--radius)',border:'1px solid #D4AAEF',background:'var(--purple-bg)'}}>
+            <div style={{display:'flex',gap:8,marginBottom:14}}>
+              {[{id:'anticipo',l:'Anticipo',desc:'Pago adelantado de esta misma solicitud'},{id:'parcial',l:'Pago parcial',desc:'Abono a una solicitud ya existente'}].map(opt=><div key={opt.id} onClick={()=>sf({_ppTab:opt.id,Es_Anticipo:opt.id==='anticipo',Monto_Pagar:'',Padre_Folio:''})} style={{flex:1,padding:'10px 12px',borderRadius:'var(--radius)',border:'1px solid '+(form._ppTab===opt.id?'var(--purple)':'rgba(110,60,180,.2)'),background:form._ppTab===opt.id?'white':'transparent',cursor:'pointer'}}>
+                <div style={{fontWeight:600,fontSize:13,color:form._ppTab===opt.id?'var(--purple)':'var(--purple-text)'}}>{opt.l}</div>
+                <div style={{fontSize:11,color:'var(--text2)',marginTop:2}}>{opt.desc}</div>
+              </div>)}
+            </div>
+            {form._ppTab==='anticipo'&&<div>
+              <label style={S.lbl}>Monto a pagar en este anticipo</label>
+              <input style={S.inp} type="number" min="0" step="0.01" placeholder="0.00" value={form.Monto_Pagar} onChange={e=>sf({Monto_Pagar:e.target.value})}/>
+              {parseFloat(form.Importe)>0&&parseFloat(form.Monto_Pagar)>0&&<div style={{display:'flex',gap:8,marginTop:10}}>
+                <div style={{flex:1,padding:'8px',background:'var(--bg)',borderRadius:'var(--radius)',textAlign:'center',border:'1px solid var(--border)'}}>
+                  <div style={{fontSize:9,color:'var(--text3)'}}>TOTAL FACTURA</div>
+                  <div style={{fontSize:13,fontWeight:700,fontFamily:'monospace'}}>{fmt(parseFloat(form.Importe))}</div>
+                </div>
+                <div style={{flex:1,padding:'8px',background:'var(--purple-bg)',borderRadius:'var(--radius)',textAlign:'center',border:'1px solid #D4AAEF'}}>
+                  <div style={{fontSize:9,color:'var(--purple)'}}>A PAGAR AHORA</div>
+                  <div style={{fontSize:13,fontWeight:700,fontFamily:'monospace',color:'var(--purple)'}}>{fmt(parseFloat(form.Monto_Pagar))}</div>
+                </div>
+                <div style={{flex:1,padding:'8px',background:'var(--green-bg)',borderRadius:'var(--radius)',textAlign:'center',border:'1px solid #9FCC7A'}}>
+                  <div style={{fontSize:9,color:'var(--green-text)'}}>PENDIENTE</div>
+                  <div style={{fontSize:13,fontWeight:700,fontFamily:'monospace',color:'var(--green)'}}>{fmt(Math.max(0,parseFloat(form.Importe)-parseFloat(form.Monto_Pagar)))}</div>
+                </div>
+              </div>}
+            </div>}
+            {form._ppTab==='parcial'&&<div>
+              <label style={S.lbl}>Solicitud madre — solo de este proveedor</label>
+              <select style={S.sel} value={form.Padre_Folio} onChange={e=>sf({Padre_Folio:e.target.value,Monto_Pagar:''})}>
+                <option value="">— Selecciona la solicitud original —</option>
+                {sols.filter(x=>x.Proveedor===form.Proveedor&&!['Pagado','Cancelado','Rechazado'].includes(x.Status)&&x.Folio!==form.Folio).map(x=><option key={x.Id} value={x.Folio||x.Title}>{x.Folio} · {fmt(x.Importe)} · {x.Status}</option>)}
+              </select>
+              {form.Padre_Folio&&<div style={{marginTop:8,padding:'10px 12px',background:'white',borderRadius:'var(--radius)',border:'1px solid #D4AAEF'}}>
+                <label style={{...S.lbl,marginTop:4}}>Monto de este pago parcial</label>
+                <input style={S.inp} type="number" min="0" step="0.01" placeholder="0.00" value={form.Monto_Pagar} onChange={e=>sf({Monto_Pagar:e.target.value})}/>
+              </div>}
+            </div>}
+          </div>}
+        </div>
 
         <Fld label="Notas adicionales" span2>
           <textarea style={{...S.inp,minHeight:60,resize:'vertical'}} placeholder="Instrucciones, observaciones…" value={form.Notas} onChange={e=>sf({Notas:e.target.value})}/>
@@ -691,7 +752,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
             <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
             <td style={S.td}><Badge val={x.Prioridad||'Media'} map={PR_COL}/></td>
             <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
-            <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</td>
+            <td style={S.td}><div style={{fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</div><SemaforoBadge fechaReq={x.Fecha_Requerida} status={x.Status}/></td>
           </tr>)}</tbody>
         </table>
       </div>
@@ -706,6 +767,9 @@ function ModAprobaciones({user,rol,onBack,pop}){
   const [sel,setSel]=useState(null);
   const [nota,setNota]=useState('');
   const [saving,setSaving]=useState(false);
+  const [showMotivo,setShowMotivo]=useState(false);
+  const [motivoReprog,setMotivoReprog]=useState('');
+  const [comprobante,setComprobante]=useState(null);
 
   useEffect(()=>{
     spGet('Solicitudes','',1000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
@@ -746,6 +810,7 @@ function ModAprobaciones({user,rol,onBack,pop}){
         <div style={S.h2}>Detalle de la solicitud</div>
         <KV label="Proveedor" val={sel.Proveedor}/>
         <KV label="Área · Categoría" val={sel.Area+' · '+sel.Categoria}/>
+        {sel.Centro_Costo&&<KV label="Centro de costo" val={sel.Centro_Costo}/>}
         <KV label="No. Factura" val={sel.Factura} mono/>
         <KV label="Método" val={sel.Metodo_Pago}/>
         <KV label="Solicitante" val={sel.Solicitante}/>
@@ -805,16 +870,29 @@ function ModFinanzas({user,rol,onBack,pop}){
     spGet('Solicitudes','',1000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
   },[]);
 
-  const porPagar=sols.filter(x=>['Autorizado por contabilidad','En revisión financiera','Programado'].includes(x.Status));
+  const [finFiltro,setFinFiltro]=useState('todos');
+  const hoyStr2=new Date().toISOString().split('T')[0];
+  const semStr=new Date(Date.now()-7*86400000).toISOString().split('T')[0];
+  const mesStr2=new Date().toISOString().slice(0,7);
+  const porPagar=sols.filter(x=>{
+    const base=['Autorizado por contabilidad','En revisión financiera','Programado'].includes(x.Status);
+    if(!base&&finFiltro!=='pagados') return false;
+    if(finFiltro==='pagados') return x.Status==='Pagado';
+    if(finFiltro==='hoy') return (x.Fecha_Programada||'').startsWith(hoyStr2);
+    if(finFiltro==='semana') return (x.Fecha_Programada||'')>=semStr;
+    if(finFiltro==='mes') return (x.Fecha_Programada||'').startsWith(mesStr2);
+    return true;
+  });
   const pagados=sols.filter(x=>x.Status==='Pagado');
 
-  function openSol(x){setSel(x);setFSt(x.Status);setFFP(x.Fecha_Programada||'');setFNt(x.Notas_Finanzas||'');}
+  function openSol(x){setSel(x);setFSt(x.Status);setFFP(x.Fecha_Programada||'');setFNt(x.Notas_Finanzas||'');setShowMotivo(false);setMotivoReprog('');setComprobante(null);}
 
   async function guardar(){
     setSaving(true);
     try{
-      await spPatch('Solicitudes',sel.Id,{Status:fSt,Fecha_Programada:fFP||null,Notas_Finanzas:fNt});
-      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:fSt,Fecha_Programada:fFP,Notas_Finanzas:fNt}:x));
+      const notaFinal=motivoReprog?fNt+(fNt?'\n':'')+'Reprogramado: '+motivoReprog:fNt;
+      await spPatch('Solicitudes',sel.Id,{Status:fSt,Fecha_Programada:fFP||null,Notas_Finanzas:notaFinal,Fecha_Pago:fSt==='Pagado'?new Date().toISOString().split('T')[0]:null});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:fSt,Fecha_Programada:fFP,Notas_Finanzas:notaFinal}:x));
       logBitacora(user.displayName,'Actualizó pago',(sel.Folio||sel.Title)+' → '+fSt+(fFP?' · Prog: '+fFP:''),'Finanzas');
       setSel(null);pop('✓ Guardado');
     }catch(e){pop('Error: '+e.message,'err');}
@@ -860,9 +938,12 @@ function ModFinanzas({user,rol,onBack,pop}){
   </div>;
 
   return <div>
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
       <div><div style={S.h1}>Finanzas</div><div style={{fontSize:13,color:'var(--text2)'}}>{porPagar.length} por programar o pagar</div></div>
       <button style={S.btnS} onClick={onBack}>← Portal</button>
+    </div>
+    <div style={{display:'flex',gap:6,marginBottom:14,flexWrap:'wrap'}}>
+      {[{id:'todos',l:'Todos'},{id:'hoy',l:'Hoy'},{id:'semana',l:'Esta semana'},{id:'mes',l:'Este mes'},{id:'pagados',l:'Pagados'}].map(f=><button key={f.id} onClick={()=>setFinFiltro(f.id)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(finFiltro===f.id?'var(--blue)':'var(--border)'),background:finFiltro===f.id?'var(--blue)':'transparent',color:finFiltro===f.id?'white':'var(--text2)',fontSize:12,fontWeight:finFiltro===f.id?600:400,cursor:'pointer'}}>{f.l}</button>)}
     </div>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
       {[{l:'Por pagar',k:kpis.porPagar,bg:'var(--orange-bg)',c:'var(--orange-text)'},{l:'Pagado total',k:kpis.pagado,bg:'var(--green-bg)',c:'var(--green-text)'}].map(kp=><div key={kp.l} style={{background:kp.bg,borderRadius:'var(--radius-lg)',padding:'14px 16px'}}>
@@ -882,7 +963,7 @@ function ModFinanzas({user,rol,onBack,pop}){
             <td style={{...S.td,fontFamily:'monospace',fontWeight:600}}>{fmt(x.Importe)}</td>
             <td style={S.td}><Badge val={x.Metodo_Pago||'Transferencia'} /></td>
             <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
-            <td style={{...S.td,fontSize:12,color:'var(--blue)'}}>{fmtD(x.Fecha_Programada)}</td>
+            <td style={S.td}><div style={{fontSize:12,color:'var(--blue)'}}>{fmtD(x.Fecha_Programada)}</div><SemaforoBadge fechaReq={x.Fecha_Programada} status={x.Status}/></td>
           </tr>)}</tbody>
         </table>
       </div>
@@ -1100,6 +1181,27 @@ function DupBanner({sol, sols}){
     </div>)}
     <div style={{fontSize:11,color:'var(--red-text)',marginTop:6}}>Verifica antes de continuar — misma factura/UUID en otra solicitud.</div>
   </div>;
+}
+
+
+// ── SEMÁFORO DE VENCIMIENTO ───────────────────────────────────────
+function semaforo(fechaReq, status){
+  if(['Pagado','Cancelado','Rechazado','Rechazado por contabilidad'].includes(status)) return null;
+  if(!fechaReq) return null;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const fecha=new Date(fechaReq); fecha.setHours(0,0,0,0);
+  const dias=Math.round((fecha-hoy)/(1000*60*60*24));
+  if(dias<0)  return {color:'#C8251F',bg:'#FEF0EF',label:'Vencida',dias:Math.abs(dias),icon:'🔴'};
+  if(dias<=3) return {color:'#C06C0A',bg:'#FEF3E2',label:'Urgente',dias,icon:'🟡'};
+  return      {color:'#0F8A65',bg:'#E6F4EF',label:'A tiempo',dias,icon:'🟢'};
+}
+
+function SemaforoBadge({fechaReq, status}){
+  const s=semaforo(fechaReq,status);
+  if(!s) return null;
+  return <span style={{fontSize:11,padding:'2px 8px',borderRadius:20,background:s.bg,color:s.color,fontWeight:600,whiteSpace:'nowrap'}}>
+    {s.icon} {s.label} {s.dias===0?'hoy':(s.dias===1?'mañana':(s.dias<0?s.dias+' días':s.dias+'d'))}
+  </span>;
 }
 
 // ── MÓDULO CONTABILIDAD ───────────────────────────────────────────
@@ -1345,6 +1447,14 @@ function ModCatalogos({user,onBack,pop}){
 function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
   const [sols,setSols]=useState([]);
   const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState('bandeja');
+  const [drawer,setDrawer]=useState(null); // {sol, mode: 'aprobar'|'validar'|'finanzas'|'ver'}
+  const [dNota,setDNota]=useState('');
+  const [dSt,setDSt]=useState('');
+  const [dFP,setDFP]=useState('');
+  const [dNtFin,setDNtFin]=useState('');
+  const [dMotivo,setDMotivo]=useState('');
+  const [dSaving,setDSaving]=useState(false);
   const [periodo,setPeriodo]=useState('mes');
   const [filtros,setFiltros]=useState({razon:'',status:'',area:'',cc:'',desde:'',hasta:''});
   const ff=p=>setFiltros(prev=>({...prev,...p}));
@@ -1520,6 +1630,42 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
   const areas=[...new Set(sols.map(x=>x.Area).filter(Boolean))];
   const centros=[...new Set(sols.map(x=>x.Centro_Costo).filter(Boolean))];
 
+
+  function openDrawer(sol){
+    const mode=
+      ['Capturado'].includes(sol.Status)&&ROLES_MODS[rol]?.includes('aprobaciones')?'aprobar':
+      ['En revisión contable','Autorizado por contabilidad'].includes(sol.Status)&&ROLES_MODS[rol]?.includes('contabilidad')?'validar':
+      ['Autorizado por contabilidad','En revisión financiera','Programado'].includes(sol.Status)&&ROLES_MODS[rol]?.includes('finanzas')?'finanzas':
+      'ver';
+    setDrawer({sol,mode});
+    setDNota('');setDSt(sol.Status);setDFP(sol.Fecha_Programada||'');setDNtFin(sol.Notas_Finanzas||'');setDMotivo('');
+  }
+
+  async function drawerAprobar(ok){
+    if(!ok&&!dNota.trim()){return;}
+    setDSaving(true);
+    const nextStatus=ok?'En revisión contable':'Rechazado';
+    try{
+      await spPatch('Solicitudes',drawer.sol.Id,{Status:nextStatus,Notas_Finanzas:dNota||''});
+      await spPost('Bitacora',{Title:ok?'Aprobó':'Rechazó',Usuario:user.displayName,Accion:ok?'Aprobó solicitud':'Rechazó solicitud',Detalle:(drawer.sol.Folio||drawer.sol.Title)+' → '+nextStatus,Modulo:'Dashboard',Fecha:new Date().toISOString()});
+      setSols(prev=>prev.map(x=>x.Id===drawer.sol.Id?{...x,Status:nextStatus}:x));
+      setDrawer(null);
+    }catch(e){console.error(e);}
+    setDSaving(false);
+  }
+
+  async function drawerFinanzas(){
+    setDSaving(true);
+    const notaF=dMotivo?dNtFin+(dNtFin?'\n':'')+'Reprogramado: '+dMotivo:dNtFin;
+    try{
+      await spPatch('Solicitudes',drawer.sol.Id,{Status:dSt,Fecha_Programada:dFP||null,Notas_Finanzas:notaF,Fecha_Pago:dSt==='Pagado'?new Date().toISOString().split('T')[0]:null});
+      await spPost('Bitacora',{Title:'Actualizó pago',Usuario:user.displayName,Accion:'Actualizó pago',Detalle:(drawer.sol.Folio||drawer.sol.Title)+' → '+dSt,Modulo:'Dashboard',Fecha:new Date().toISOString()});
+      setSols(prev=>prev.map(x=>x.Id===drawer.sol.Id?{...x,Status:dSt,Fecha_Programada:dFP,Notas_Finanzas:notaF}:x));
+      setDrawer(null);
+    }catch(e){console.error(e);}
+    setDSaving(false);
+  }
+
   if(loading) return <div style={{textAlign:'center',padding:60,color:'var(--text3)'}}><div style={{fontSize:32,marginBottom:12}}>📊</div>Cargando dashboard…</div>;
 
   return <div className="fade-in">
@@ -1572,25 +1718,31 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
 
     {/* KPIs */}
     <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
-      {kpis.map(k=><div key={k.l} style={{background:k.bg,borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)'}}>
+      {kpis.map(k=><div key={k.l} onClick={()=>setTab('bandeja')} style={{background:k.bg,borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)',cursor:'pointer',transition:'transform .15s,box-shadow .15s'}} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='var(--shadow-lg)';}} onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='';}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
           <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:k.c,letterSpacing:'.06em',lineHeight:1.4,maxWidth:'70%'}}>{k.l}</div>
           <span style={{fontSize:18}}>{k.icon}</span>
         </div>
         <div style={{fontSize:22,fontWeight:700,color:k.c,fontFamily:'monospace',marginTop:6}}>{k.n}</div>
         <div style={{fontSize:12,fontFamily:'monospace',color:k.c,opacity:.8,marginTop:2}}>{fmt(k.v)}</div>
+        <div style={{fontSize:10,color:k.c,opacity:.6,marginTop:4}}>Ver →</div>
       </div>)}
     </div>
 
+    {/* Tabs de contenido */}
+    <div style={{display:'flex',gap:4,borderBottom:'1px solid var(--border)',marginBottom:16,flexWrap:'wrap'}}>
+      {[{id:'bandeja',l:'📋 Bandeja'},{id:'graficas',l:'📊 Gráficas'},{id:'eficiencia',l:'⏱️ Eficiencia'}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:'9px 16px',border:'none',borderBottom:tab===t.id?'2px solid var(--green)':'2px solid transparent',background:'transparent',cursor:'pointer',fontSize:13,fontWeight:tab===t.id?600:400,color:tab===t.id?'var(--green)':'var(--text2)',marginBottom:-1}}>{t.l}</button>)}
+    </div>
+
     {/* Bandeja prioritaria */}
-    {bandejaHoy.length>0&&<div style={{...S.card,padding:0,overflow:'hidden',marginBottom:16}}>
+    {tab==='bandeja'&&bandejaHoy.length>0&&<div style={{...S.card,padding:0,overflow:'hidden',marginBottom:16}}>
       <div style={{padding:'10px 16px',background:'var(--bg2)',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <div style={{fontWeight:700,fontSize:13}}>📋 Bandeja prioritaria — hoy</div>
         <span style={{fontSize:11,color:'var(--text3)'}}>{bandejaHoy.length} solicitudes</span>
       </div>
       <table style={{width:'100%',borderCollapse:'collapse'}}>
         <thead><tr>{['Prior.','Folio','Proveedor','Área','Centro','Importe','Status','Fecha req.'].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
-        <tbody>{bandejaHoy.map(x=><tr key={x.Id} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
+        <tbody>{bandejaHoy.map(x=><tr key={x.Id} onClick={()=>openDrawer(x)} style={{cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.background='var(--bg2)'} onMouseLeave={e=>e.currentTarget.style.background=''}>
           <td style={S.td}><Badge val={x.Prioridad||'Media'} map={PR_COL}/></td>
           <td style={{...S.td,...S.mono,color:'var(--green)',fontWeight:700}}>{x.Folio||x.Title}</td>
           <td style={S.td}><div style={{fontWeight:500,fontSize:13}}>{x.Proveedor}</div><div style={{fontSize:11,color:'var(--text2)'}}>{x.Razon_Social}</div></td>
@@ -1598,34 +1750,129 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
           <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{x.Centro_Costo||'—'}</td>
           <td style={{...S.td,fontFamily:'monospace',fontWeight:700}}>{fmt(x.Importe)}</td>
           <td style={S.td}><Badge val={x.Status} map={ST_COL}/></td>
-          <td style={{...S.td,fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</td>
+          <td style={S.td}><div style={{fontSize:12,color:'var(--text2)'}}>{fmtD(x.Fecha_Requerida)}</div><SemaforoBadge fechaReq={x.Fecha_Requerida} status={x.Status}/></td>
         </tr>)}</tbody>
       </table>
     </div>}
 
+    {/* Tab: Eficiencia operativa */}
+
+    {/* Gráficas - only show in graficas tab */}
+    {tab==='eficiencia'&&(()=>{
+      // Only paid solicitudes have complete cycle
+      const pagadas=solsFiltradas.filter(x=>x.Status==='Pagado'&&x.Fecha_Captura&&x.Fecha_Pago);
+
+      function diasEntre(d1,d2){
+        if(!d1||!d2) return null;
+        const diff=new Date(d2)-new Date(d1);
+        return Math.max(0,Math.round(diff/(1000*60*60*24)));
+      }
+
+      // Calculate average times
+      const tiempos=pagadas.map(x=>({
+        folio:x.Folio||x.Title,
+        proveedor:x.Proveedor,
+        importe:x.Importe,
+        captura:x.Fecha_Captura,
+        pago:x.Fecha_Pago,
+        total:diasEntre(x.Fecha_Captura,x.Fecha_Pago),
+      })).filter(x=>x.total!==null);
+
+      const avg=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;
+      const avgTotal=avg(tiempos.map(x=>x.total));
+      const max10=tiempos.sort((a,b)=>b.total-a.total).slice(0,10);
+
+      // Distribution buckets
+      const buckets=[
+        {l:'Mismo día',n:tiempos.filter(x=>x.total===0).length,c:'#0F8A65'},
+        {l:'1-3 días',n:tiempos.filter(x=>x.total>=1&&x.total<=3).length,c:'#1A56A4'},
+        {l:'4-7 días',n:tiempos.filter(x=>x.total>=4&&x.total<=7).length,c:'#C06C0A'},
+        {l:'8-15 días',n:tiempos.filter(x=>x.total>=8&&x.total<=15).length,c:'#6D3AB5'},
+        {l:'Más de 15 días',n:tiempos.filter(x=>x.total>15).length,c:'#C8251F'},
+      ].filter(b=>b.n>0);
+      const maxB=Math.max(...buckets.map(b=>b.n),1);
+
+      return <div>
+        {/* KPIs de eficiencia */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+          <div style={{background:'var(--blue-bg)',borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:'var(--blue)',letterSpacing:'.06em'}}>Tiempo promedio total</div>
+            <div style={{fontSize:28,fontWeight:700,color:'var(--blue)',fontFamily:'monospace',marginTop:6}}>{avgTotal}<span style={{fontSize:14,marginLeft:4}}>días</span></div>
+            <div style={{fontSize:11,color:'var(--blue)',opacity:.7,marginTop:2}}>desde captura hasta pago</div>
+          </div>
+          <div style={{background:'var(--green-bg)',borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:'var(--green)',letterSpacing:'.06em'}}>Solicitudes analizadas</div>
+            <div style={{fontSize:28,fontWeight:700,color:'var(--green)',fontFamily:'monospace',marginTop:6}}>{tiempos.length}</div>
+            <div style={{fontSize:11,color:'var(--green)',opacity:.7,marginTop:2}}>pagos completados con fechas</div>
+          </div>
+          <div style={{background:avgTotal<=7?'var(--green-bg)':avgTotal<=15?'var(--orange-bg)':'var(--red-bg)',borderRadius:'var(--radius-lg)',padding:'14px 16px',border:'1px solid var(--border)'}}>
+            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:avgTotal<=7?'var(--green)':avgTotal<=15?'var(--orange)':'var(--red)',letterSpacing:'.06em'}}>Evaluación</div>
+            <div style={{fontSize:20,fontWeight:700,color:avgTotal<=7?'var(--green)':avgTotal<=15?'var(--orange)':'var(--red)',marginTop:6}}>
+              {avgTotal===0?'Sin datos':avgTotal<=3?'🟢 Excelente':avgTotal<=7?'🟢 Bueno':avgTotal<=15?'🟡 Mejorable':'🔴 Crítico'}
+            </div>
+            <div style={{fontSize:11,opacity:.7,marginTop:2,color:avgTotal<=7?'var(--green)':avgTotal<=15?'var(--orange)':'var(--red)'}}>{avgTotal<=3?'Menos de 3 días':avgTotal<=7?'Menos de 1 semana':avgTotal<=15?'Entre 1 y 2 semanas':'Más de 2 semanas'}</div>
+          </div>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+          {/* Distribución de tiempos */}
+          <div style={S.card}>
+            <div style={S.h2}>Distribución de tiempos de pago</div>
+            {buckets.length===0?<div style={{textAlign:'center',padding:20,color:'var(--text3)',fontSize:12}}>Sin datos suficientes</div>
+            :buckets.map(b=><div key={b.l} style={{marginBottom:10}}>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}}>
+                <span style={{fontWeight:500}}>{b.l}</span>
+                <span style={{fontWeight:700,color:b.c}}>{b.n} pagos ({Math.round(b.n/tiempos.length*100)}%)</span>
+              </div>
+              <div style={{height:8,borderRadius:4,background:'var(--bg3)'}}>
+                <div style={{height:'100%',borderRadius:4,background:b.c,width:(b.n/maxB*100)+'%',transition:'width .6s'}}/>
+              </div>
+            </div>)}
+          </div>
+
+          {/* Top 10 más lentos */}
+          <div style={S.card}>
+            <div style={S.h2}>Pagos más tardados</div>
+            {max10.length===0?<div style={{textAlign:'center',padding:20,color:'var(--text3)',fontSize:12}}>Sin datos</div>
+            :max10.map((x,i)=><div key={x.folio} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+              <div>
+                <span style={{fontFamily:'monospace',fontSize:11,fontWeight:700,color:'var(--green)'}}>{x.folio}</span>
+                <div style={{fontSize:11,color:'var(--text2)',maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{x.proveedor}</div>
+              </div>
+              <span style={{fontSize:13,fontWeight:700,fontFamily:'monospace',color:x.total<=7?'var(--green)':x.total<=15?'var(--orange)':'var(--red)'}}>{x.total}d</span>
+            </div>)}
+          </div>
+        </div>
+
+        {/* Nota si no hay datos */}
+        {tiempos.length===0&&<div style={{...S.card,textAlign:'center',padding:40,color:'var(--text3)'}}>
+          <div style={{fontSize:32,marginBottom:8}}>⏱️</div>
+          <div style={{fontSize:14,fontWeight:600,marginBottom:6}}>Sin datos de eficiencia aún</div>
+          <div style={{fontSize:12,lineHeight:1.7}}>Los indicadores aparecerán cuando haya solicitudes con status <strong>Pagado</strong> y fecha de captura registrada.</div>
+        </div>}
+      </div>;
+    })()}
+
     {/* Gráficas fila 1 */}
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+    {tab==='graficas'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
       <BarChart data={agrupar(solsFiltradas,'Area')} title="Gastos por área" col={null}/>
       <BarChart data={agrupar(solsFiltradas,'Razon_Social')} title="Gastos por razón social" col="#1A56A4"/>
-    </div>
+    </div>}
 
-    {/* Gráficas fila 2 */}
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+    {tab==='graficas'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
       <BarChart data={agrupar(solsFiltradas,'Categoria')} title="Gastos por categoría" col="#6D3AB5"/>
       <DonutChart data={statusData} title="Status de solicitudes"/>
-    </div>
+    </div>}
 
-    {/* Gráficas fila 3 */}
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+      {tab==='graficas'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
       <PagoVsPendiente/>
       <BarChart data={agrupar(solsFiltradas,'Proveedor',10)} title="Top 10 proveedores" col="#C06C0A"/>
-    </div>
+    </div>}
 
-    {/* Fila 4 */}
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
+    {tab==='graficas'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
       <BarChart data={agrupar(solsFiltradas.filter(x=>x.Centro_Costo),'Centro_Costo',10)} title="Gastos por centro de costo / sucursal" col="#3D5A80"/>
       <FunnelChart/>
-    </div>
+    </div>}
   </div>;
 }
 
@@ -1679,6 +1926,64 @@ function PortalInicio({user,rol,onNavigate,pendientes,onLogout}){
         </div>)}
       </div>
     </div>
+    {/* ── Drawer de acción ── */}
+    {drawer&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.45)',zIndex:1000,display:'flex',justifyContent:'flex-end'}} onClick={e=>{if(e.target===e.currentTarget)setDrawer(null);}}>
+      <div style={{width:'100%',maxWidth:460,background:'var(--bg)',height:'100%',overflowY:'auto',boxShadow:'-8px 0 28px rgba(0,0,0,.2)',padding:24}} className="fade-in">
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20,borderBottom:'1px solid var(--border)',paddingBottom:16}}>
+          <button style={{...S.btnS,padding:'6px 10px'}} onClick={()=>setDrawer(null)}>✕</button>
+          <div><div style={{fontFamily:'monospace',fontWeight:700,color:'var(--green)',fontSize:13}}>{drawer.sol.Folio||drawer.sol.Title}</div><div style={{fontSize:16,fontWeight:700}}>{drawer.sol.Proveedor}</div></div>
+          <div style={{marginLeft:'auto'}}><Badge val={drawer.sol.Status} map={ST_COL}/></div>
+        </div>
+        <div style={{...S.card,background:'var(--bg2)',padding:'12px 14px',marginBottom:16}}>
+          <KV label="Área · Categoría" val={(drawer.sol.Area||'')+(drawer.sol.Categoria?' · '+drawer.sol.Categoria:'')}/>
+          {drawer.sol.Centro_Costo&&<KV label="Centro de costo" val={drawer.sol.Centro_Costo}/>}
+          <KV label="Razón social" val={drawer.sol.Razon_Social}/>
+          <KV label="Método" val={drawer.sol.Metodo_Pago}/>
+          {drawer.sol.Notas&&<div style={{marginTop:8,padding:'8px 10px',background:'#FFFBEB',borderRadius:'var(--radius)',fontSize:12,lineHeight:1.6,borderLeft:'2px solid #F59E0B'}}>{drawer.sol.Notas}</div>}
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:10}}><span style={{fontSize:13,color:'var(--text2)'}}>Importe</span><span style={{fontSize:20,fontWeight:700,fontFamily:'monospace',color:'var(--green)'}}>{fmt(drawer.sol.Importe)}</span></div>
+          <div style={{marginTop:6}}><SemaforoBadge fechaReq={drawer.sol.Fecha_Requerida} status={drawer.sol.Status}/></div>
+        </div>
+        {drawer.mode==='aprobar'&&<div>
+          <div style={S.h2}>Tu aprobación</div>
+          <div style={{padding:'10px 12px',background:'var(--orange-bg)',borderRadius:'var(--radius)',fontSize:12,color:'var(--orange-text)',marginBottom:12,lineHeight:1.7}}>Confirma que el gasto es necesario y el monto es correcto.</div>
+          <label style={S.lbl}>Notas (obligatorio si rechazas)</label>
+          <textarea style={{...S.inp,minHeight:80,resize:'vertical',marginBottom:14}} value={dNota} onChange={e=>setDNota(e.target.value)} placeholder="Motivo o instrucciones…"/>
+          <div style={{display:'flex',gap:10}}>
+            <button style={{...S.btnR,flex:1}} onClick={()=>drawerAprobar(false)} disabled={dSaving||!dNota.trim()}>✕ Rechazar</button>
+            <button style={{...S.btnP,flex:1}} onClick={()=>drawerAprobar(true)} disabled={dSaving}>✓ Aprobar →</button>
+          </div>
+        </div>}
+        {drawer.mode==='validar'&&<div>
+          <div style={S.h2}>Validación contable</div>
+          <div style={{padding:'10px 12px',background:'var(--purple-bg)',borderRadius:'var(--radius)',fontSize:12,color:'var(--purple)',marginBottom:12}}>Revisa que el CFDI sea correcto antes de autorizar.</div>
+          <label style={S.lbl}>Notas de contabilidad</label>
+          <textarea style={{...S.inp,minHeight:80,resize:'vertical',marginBottom:14}} value={dNota} onChange={e=>setDNota(e.target.value)} placeholder="Observaciones del CFDI…"/>
+          <div style={{display:'flex',gap:10}}>
+            <button style={{...S.btnR,flex:1}} onClick={async()=>{setDSaving(true);await spPatch('Solicitudes',drawer.sol.Id,{Status:'Rechazado por contabilidad'});setSols(prev=>prev.map(x=>x.Id===drawer.sol.Id?{...x,Status:'Rechazado por contabilidad'}:x));setDrawer(null);setDSaving(false);}} disabled={dSaving}>✕ Rechazar</button>
+            <button style={{...S.btnP,flex:1}} onClick={async()=>{setDSaving(true);await spPatch('Solicitudes',drawer.sol.Id,{Status:'Autorizado por contabilidad',Notas_Finanzas:dNota});setSols(prev=>prev.map(x=>x.Id===drawer.sol.Id?{...x,Status:'Autorizado por contabilidad'}:x));setDrawer(null);setDSaving(false);}} disabled={dSaving}>✓ Autorizar →</button>
+          </div>
+        </div>}
+        {drawer.mode==='finanzas'&&<div>
+          <div style={S.h2}>Gestión del pago</div>
+          <div style={{display:'grid',gap:12}}>
+            <div><label style={S.lbl}>Status</label>
+              <select style={S.sel} value={dSt} onChange={e=>setDSt(e.target.value)}>
+                {['En revisión financiera','Programado','Pagado','Cancelado'].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div><label style={S.lbl}>Fecha programada</label><input type="date" style={S.inp} value={dFP} onChange={e=>setDFP(e.target.value)}/></div>
+            {dFP&&dFP!==drawer.sol.Fecha_Programada&&drawer.sol.Fecha_Programada&&<div style={{padding:'10px 12px',background:'var(--orange-bg)',borderRadius:'var(--radius)',border:'1px solid var(--yellow-border)'}}>
+              <label style={S.lbl}>Motivo de reprogramación</label>
+              <input style={S.inp} placeholder="Ej. Falta de liquidez…" value={dMotivo} onChange={e=>setDMotivo(e.target.value)}/>
+            </div>}
+            <div><label style={S.lbl}>Notas de finanzas</label><textarea style={{...S.inp,minHeight:60,resize:'vertical'}} value={dNtFin} onChange={e=>setDNtFin(e.target.value)} placeholder="Referencia de transferencia…"/></div>
+            <button style={S.btnP} onClick={drawerFinanzas} disabled={dSaving}>{dSaving?'Guardando…':'Guardar →'}</button>
+          </div>
+        </div>}
+        {drawer.mode==='ver'&&<div style={{...S.card,background:'var(--bg2)',fontSize:13,color:'var(--text2)',textAlign:'center',padding:20}}>Vista de solo lectura.</div>}
+      </div>
+    </div>}
+
   </div>;
 }
 
