@@ -926,6 +926,9 @@ function ModFinanzas({user,rol,onBack,pop}){
   },[]);
 
   const [finFiltro,setFinFiltro]=useState('todos');
+  const [showMotivo,setShowMotivo]=useState(false);
+  const [motivoReprog,setMotivoReprog]=useState('');
+  const [comprobante,setComprobante]=useState(null);
   const hoyStr2=new Date().toISOString().split('T')[0];
   const semStr=new Date(Date.now()-7*86400000).toISOString().split('T')[0];
   const mesStr2=new Date().toISOString().slice(0,7);
