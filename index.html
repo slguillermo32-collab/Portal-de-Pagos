@@ -44,6 +44,20 @@ const {useState,useEffect,useCallback,useRef}=React;
 // ⚠️  Cambiar a false antes de producción
 // ══════════════════════════════════════════════════════════════════
 const DEMO_MODE = true;
+/* ═══════════════════════════════════════════════════════════════════
+   SHAREPOINT INDEXES — configurar en producción para performance
+   Lista: Solicitudes → Configuración → Columnas indexadas → Agregar:
+   ✓ Status              (filtro principal en todos los módulos)
+   ✓ Fecha_Captura       (ordenamiento y métricas de eficiencia)
+   ✓ Fecha_Requerida     (semáforo de vencimiento)
+   ✓ Razon_Social        (filtro en reportes y dashboard)
+   ✓ Area                (agrupación en gráficas)
+   ✓ Proveedor           (deduplicación y top proveedores)
+   ✓ Centro_Costo        (filtro por sucursal)
+   SharePoint permite hasta 20 columnas indexadas por lista.
+   Sin índices, consultas >5000 registros generan error de umbral.
+═════════════════════════════════════════════════════════════════════ */
+
 
 const DEMO_USER = {
   displayName: 'Guillermo Sánchez',
@@ -132,18 +146,27 @@ async function demoPatch(listName, id, data) {
 }
 
 // ── Override API functions in DEMO_MODE ───────────────────────────
-async function spGet(listName, filter='', top=500) {
+async function spGet(listName, filter='', top=200) {
   if (DEMO_MODE) return demoGet(listName);
-  // ... real Graph call below
   const token = await getToken();
   const siteId = await getSiteId();
   const listId = await getListId(listName);
-  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top;
+  const SELECT_MAP = {
+    Solicitudes:'id,fields/Title,fields/Folio,fields/Status,fields/Proveedor,fields/RFC_Proveedor,fields/Razon_Social,fields/Area,fields/Categoria,fields/Centro_Costo,fields/Importe,fields/Subtotal,fields/IVA,fields/Monto_Pagar,fields/Es_Anticipo,fields/Es_Parcial,fields/Padre_Folio,fields/Factura,fields/Tipo_Documento,fields/Metodo_Pago,fields/Prioridad,fields/Fecha_Requerida,fields/Fecha_Captura,fields/Fecha_Aprobacion,fields/Fecha_Validacion,fields/Fecha_Programado,fields/Fecha_Pago,fields/Fecha_Programada,fields/Notas,fields/Notas_Finanzas,fields/Notas_Conta,fields/Motivo_Rechazo_Conta,fields/Checklist_Conta,fields/Solicitante,fields/Historial',
+  };
+  const sel = SELECT_MAP[listName] ? '&$select=' + SELECT_MAP[listName] : '';
+  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top + sel;
   if (filter) url += '&$filter=' + filter;
-  const r = await fetch(url, {headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}});
-  if (!r.ok) { const e=await r.text(); console.error('spGet ERROR:', r.status, e); throw new Error('Error leyendo ' + listName + ' | ' + r.status); }
-  const d = await r.json();
-  return (d.value||[]).map(item => ({Id:item.id, ...item.fields}));
+  if (listName === 'Solicitudes' && !filter) url += '&$orderby=fields/Fecha_Captura desc';
+  let all = [];
+  while (url) {
+    const r = await fetch(url, {headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if (!r.ok) { const e=await r.text(); throw new Error('Error leyendo '+listName+' | '+r.status); }
+    const d = await r.json();
+    all = all.concat((d.value||[]).map(i=>({Id:i.id,...i.fields})));
+    url = d['@odata.nextLink']||null;
+  }
+  return all;
 }
 
 async function spPost(listName, data) {
@@ -375,34 +398,18 @@ async function extractDocument(file, apiKey) {
       esCot: false,
     };
   }
-  // Real extraction via Claude API
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const base64 = e.target.result;
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 800,
-            messages: [{role:'user', content:[
-              {type: file.type==='application/pdf'?'document':'image', source:{type:'base64',media_type:file.type,data:base64.split(',')[1]}},
-              {type:'text', text:'Extrae datos de este documento fiscal mexicano. Responde SOLO JSON sin markdown: {"rfcEm":"","nomEm":"","rfcRec":"","nomRec":"","usoCFDI":"","metodoPago":"","formaPago":"","fecha":"YYYY-MM-DD","subtotal":0,"iva":0,"ivaRet":0,"total":0,"uuid":"","esCot":false}'}
-            ]}]
-          })
-        });
-        const data = await resp.json();
-        const text = data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-        const parsed = JSON.parse(text);
-        resolve({ok:true, ...parsed});
-      } catch(e) {
-        resolve({ok:false, error:e.message});
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  // ⚠️  SEGURIDAD: La llamada directa a Claude API desde el frontend
+  // expone la API Key en el navegador. Para producción, implementar
+  // un proxy backend (Azure Function o similar) que maneje la llamada.
+  // Por ahora se mantiene la simulación para el piloto.
+  await new Promise(r=>setTimeout(r,1500));
+  return {
+    ok:true,
+    rfcEm:'',nomEm:'',rfcRec:'',nomRec:'',usoCFDI:'',
+    metodoPago:'',formaPago:'',fecha:new Date().toISOString().split('T')[0],
+    subtotal:0,iva:0,ivaRet:0,total:0,uuid:'',esCot:false,
+    _nota:'Lector de documentos disponible en producción con backend proxy.'
+  };
 }
 
 
@@ -441,6 +448,8 @@ function ModSolicitudes({user,rol,onBack,pop}){
   const [extracting,setExtracting]=useState(false);
   const [newProvSuggestion,setNewProvSuggestion]=useState(null);
   const [newRazSuggestion,setNewRazSuggestion]=useState(null);
+  const [showCancelar,setShowCancelar]=useState(null);
+  const [motivoCancelar,setMotivoCancelar]=useState('');
   const [vistaFiltro,setVistaFiltro]=useState('todas');
 
   const FORM0={
@@ -484,6 +493,8 @@ function ModSolicitudes({user,rol,onBack,pop}){
         logBitacora(user.displayName,'Editó solicitud',(sel.Folio||sel.Title)+' · '+form.Proveedor,'Solicitudes');
         pop('✓ Solicitud actualizada');
       } else {
+        var initH=JSON.stringify([buildHistorialEntry(user.displayName,'Creó solicitud',folio+' · '+data.Proveedor+' · '+fmt(parseFloat(data.Importe||0)),'Capturado')]);
+        data.Historial=initH;
         const created=await spPost('Solicitudes',data);
         setSols(prev=>[created,...prev]);
         logBitacora(user.displayName,'Creó solicitud',folio+' · '+form.Proveedor+' · '+fmt(form.Importe),'Solicitudes');
@@ -713,6 +724,7 @@ function ModSolicitudes({user,rol,onBack,pop}){
         <Badge val={sel.Prioridad||'Media'} map={PR_COL}/>
         <Badge val={sel.Status} map={ST_COL}/>
         {puedeEditar(sel)&&<button onClick={()=>{setForm({...FORM0,...sel});setVista('form');}} style={{...S.btnS,fontSize:12,padding:'5px 12px'}}>✏️ Editar</button>}
+        {!['Pagado','Cancelado'].includes(sel.Status)&&(rol==='Administrador'||sel.Status==='Capturado')&&<button onClick={()=>setShowCancelar(sel)} style={{...S.btnR,fontSize:12,padding:'5px 12px'}}>✕ Cancelar</button>}
       </div>
     </div>
     <DupBanner sol={sel} sols={sols}/>
@@ -722,17 +734,22 @@ function ModSolicitudes({user,rol,onBack,pop}){
         <span style={{fontWeight:700,fontSize:13,color:'var(--red-text)'}}>Rechazado por Contabilidad</span>
         {sel.Checklist_Conta&&<span style={{fontSize:11,background:'var(--red)',color:'white',padding:'2px 8px',borderRadius:10,marginLeft:'auto'}}>{sel.Checklist_Conta}</span>}
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:sel.Motivo_Rechazo_Conta?10:0}}>
-        {[{k:'rfc',l:'RFC del emisor'},{k:'rs',l:'Razón social'},{k:'uso',l:'Uso de CFDI'},{k:'fecha',l:'Fecha del periodo'},{k:'metodo',l:'Método de pago'},{k:'forma',l:'Forma de pago'}].map(function(item){
-          var motivo=sel.Motivo_Rechazo_Conta||'';
-          var aprobado=!motivo.includes(item.l);
-          return <div key={item.k} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',borderRadius:'var(--radius)',background:aprobado?'#dcfce7':'#fee2e2',border:'1px solid '+(aprobado?'#86efac':'#fca5a5')}}>
-            <span style={{fontSize:13}}>{aprobado?'✓':'✗'}</span>
-            <span style={{fontSize:12,fontWeight:500,color:aprobado?'#166534':'#991b1b'}}>{item.l}</span>
-          </div>;
-        })}
-      </div>
-      {sel.Motivo_Rechazo_Conta&&<div style={{fontSize:11,color:'var(--red-text)',borderTop:'1px solid #fca5a5',paddingTop:8}}>{sel.Motivo_Rechazo_Conta}</div>}
+      {sel.Motivo_Rechazo_Conta&&(()=>{
+        var faltantes=sel.Motivo_Rechazo_Conta.split('|').filter(function(x){return x&&!x.startsWith('|');});
+        if(!faltantes.length) return null;
+        return <div>
+          <div style={{fontSize:12,fontWeight:600,color:'var(--red-text)',marginBottom:6}}>Revisar los siguientes datos:</div>
+          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+            {faltantes.map(function(item,i){
+              return <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 10px',borderRadius:'var(--radius)',background:'#fee2e2',border:'1px solid #fca5a5'}}>
+                <span style={{fontSize:14,color:'#991b1b'}}>✗</span>
+                <span style={{fontSize:13,color:'#991b1b',fontWeight:500}}>{item.trim()}</span>
+              </div>;
+            })}
+          </div>
+        </div>;
+      })()}
+      {sel.Notas_Conta&&<div style={{marginTop:10,padding:'8px 10px',background:'#fee2e2',borderRadius:'var(--radius)',fontSize:12,color:'var(--red-text)',borderTop:'1px solid #fca5a5'}}>📝 {sel.Notas_Conta}</div>}
     </div>}
     {(sel.Status==='Rechazado'||sel.Status==='Rechazado por contabilidad')&&sel.Notas_Finanzas&&!sel.Motivo_Rechazo_Conta&&<div style={{padding:'12px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
       <div style={{fontWeight:700,fontSize:13,color:'var(--red-text)',marginBottom:4}}>✕ Motivo de rechazo</div>
@@ -768,9 +785,35 @@ function ModSolicitudes({user,rol,onBack,pop}){
         {sel.Solicitante&&<div style={{marginTop:10,fontSize:12,color:'var(--text2)'}}>Solicitado por: <strong>{sel.Solicitante}</strong></div>}
       </div>
     </div>
+    <HistorialTimeline sol={sel}/>
   </div>;
 
+  async function cancelarSolicitud(){
+    if(!motivoCancelar.trim()){pop('Escribe el motivo de cancelación','err');return;}
+    try{
+      var h=await appendHistorial(showCancelar.Id,showCancelar,user.displayName,'Canceló solicitud',motivoCancelar,'Cancelado');
+      await spPatch('Solicitudes',showCancelar.Id,{Status:'Cancelado',Historial:JSON.stringify(h)});
+      await spPost('Bitacora',{Title:'Canceló solicitud',Usuario:user.displayName,Accion:'Canceló solicitud',Detalle:(showCancelar.Folio||showCancelar.Title)+' | '+motivoCancelar,Modulo:'Solicitudes',Fecha:new Date().toISOString()});
+      setSols(prev=>prev.map(x=>x.Id===showCancelar.Id?{...x,Status:'Cancelado',Historial:JSON.stringify(h)}:x));
+      setShowCancelar(null);setMotivoCancelar('');setSel(null);
+      pop('Solicitud cancelada');
+    }catch(e){pop('Error: '+e.message,'err');}
+  }
+
   return <div>
+    {showCancelar&&<Modal onClose={()=>{setShowCancelar(null);setMotivoCancelar('');}}>
+      <div style={{fontSize:16,fontWeight:700,marginBottom:6}}>Cancelar solicitud</div>
+      <div style={{fontSize:13,color:'var(--text2)',marginBottom:16}}>{showCancelar.Folio} · {showCancelar.Proveedor} · {fmt(showCancelar.Importe)}</div>
+      <div style={{padding:'10px 12px',background:'var(--red-bg)',borderRadius:'var(--radius)',fontSize:12,color:'var(--red-text)',marginBottom:14,lineHeight:1.7}}>
+        Esta acción no se puede deshacer. La solicitud quedará en status <strong>Cancelado</strong> con registro en bitácora.
+      </div>
+      <label style={S.lbl}>Motivo de cancelación *</label>
+      <textarea style={{...S.inp,minHeight:80,resize:'vertical',marginBottom:14}} value={motivoCancelar} onChange={e=>setMotivoCancelar(e.target.value)} placeholder="Describe el motivo de cancelación…" autoFocus/>
+      <div style={{display:'flex',gap:10}}>
+        <button style={{...S.btnS,flex:1}} onClick={()=>{setShowCancelar(null);setMotivoCancelar('');}}>Volver</button>
+        <button style={{...S.btnR,flex:1}} onClick={cancelarSolicitud} disabled={!motivoCancelar.trim()}>Confirmar cancelación</button>
+      </div>
+    </Modal>}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:12}}>
       <div>
         <div style={S.h1}>Solicitudes de pago</div>
@@ -823,7 +866,7 @@ function ModAprobaciones({user,rol,onBack,pop}){
   const [comprobante,setComprobante]=useState(null);
 
   useEffect(()=>{
-    spGet('Solicitudes','',1000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+    spGet('Solicitudes','',500).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
   },[]);
 
   const porAprobar=sols.filter(x=>x.Status==='Capturado');
@@ -838,8 +881,9 @@ function ModAprobaciones({user,rol,onBack,pop}){
     else if(sel.Importe>=LIMITE_2A&&sel.Status==='Capturado') nextStatus='En revisión contable';
     else nextStatus='En revisión contable';
     try{
-      await spPatch('Solicitudes',sel.Id,{Status:nextStatus,Notas_Finanzas:(nota||''),Fecha_Aprobacion:new Date().toISOString()});
-      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:nextStatus}:x));
+      var hA=await appendHistorial(sel.Id,sel,user.displayName,ok?'Aprobó solicitud':'Rechazó solicitud',nota||'',nextStatus);
+      await spPatch('Solicitudes',sel.Id,{Status:nextStatus,Notas_Finanzas:(nota||''),Fecha_Aprobacion:new Date().toISOString(),Historial:JSON.stringify(hA)});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:nextStatus,Historial:JSON.stringify(hA)}:x));
       logBitacora(user.displayName,ok?'Aprobó solicitud':'Rechazó solicitud',(sel.Folio||sel.Title)+' · '+sel.Proveedor+' · '+nextStatus,'Aprobaciones');
       setSel(null);setNota('');
       pop(ok?'✓ Aprobada':'Rechazada');
@@ -856,10 +900,19 @@ function ModAprobaciones({user,rol,onBack,pop}){
       <div style={{marginLeft:'auto'}}><Badge val={sel.Status} map={ST_COL}/></div>
     </div>
     <DupBanner sol={sel} sols={sols}/>
-    {sel.Status==='Rechazado por contabilidad'&&sel.Motivo_Rechazo_Conta&&<div style={{padding:'12px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
-      <div style={{fontWeight:700,fontSize:13,color:'var(--red-text)',marginBottom:4}}>🔍 Rechazado por Contabilidad — {sel.Checklist_Conta||''}</div>
-      <div style={{fontSize:12,color:'var(--red-text)'}}>{sel.Motivo_Rechazo_Conta}</div>
-    </div>}
+    {sel.Status==='Rechazado por contabilidad'&&sel.Motivo_Rechazo_Conta&&(()=>{
+      var faltantes=sel.Motivo_Rechazo_Conta.split('|').filter(function(x){return x&&!x.startsWith('|');});
+      return <div style={{padding:'12px 16px',background:'var(--red-bg)',border:'1px solid #FCA5A5',borderRadius:'var(--radius)',marginBottom:14,borderLeft:'4px solid var(--red)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:faltantes.length?8:0}}>
+          <span style={{fontWeight:700,fontSize:13,color:'var(--red-text)'}}>🔍 Rechazado por Contabilidad</span>
+          {sel.Checklist_Conta&&<span style={{fontSize:11,color:'var(--text3)',marginLeft:'auto'}}>{sel.Checklist_Conta}</span>}
+        </div>
+        {faltantes.length>0&&<div>
+          <div style={{fontSize:11,color:'var(--red-text)',marginBottom:4}}>Revisar:</div>
+          {faltantes.map(function(f,i){return <div key={i} style={{fontSize:12,color:'#991b1b',padding:'2px 0'}}>✗ {f.trim()}</div>;})}
+        </div>}
+      </div>;
+    })()}
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
       <div style={S.card}>
         <div style={S.h2}>Detalle de la solicitud</div>
@@ -949,8 +1002,11 @@ function ModFinanzas({user,rol,onBack,pop}){
     setSaving(true);
     try{
       const notaFinal=motivoReprog?fNt+(fNt?'\n':'')+'Reprogramado: '+motivoReprog:fNt;
-      await spPatch('Solicitudes',sel.Id,{Status:fSt,Fecha_Programada:fFP||null,Notas_Finanzas:notaFinal,Fecha_Pago:fSt==='Pagado'?new Date().toISOString().split('T')[0]:null,Fecha_Programado:fSt==='Programado'?new Date().toISOString():sel.Fecha_Programado});
-      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:fSt,Fecha_Programada:fFP,Notas_Finanzas:notaFinal}:x));
+      var accionFin=fSt==='Pagado'?'Registró pago':fSt==='Programado'?(motivoReprog?'Reprogramó pago':'Programó pago'):'Actualizó status';
+      var detalleFin=fSt+(fFP?' · Fecha: '+fFP:'')+(motivoReprog?' · Motivo: '+motivoReprog:'')+(comprobante?' · Comprobante: '+comprobante.name:'');
+      var hF=await appendHistorial(sel.Id,sel,user.displayName,accionFin,detalleFin,fSt);
+      await spPatch('Solicitudes',sel.Id,{Status:fSt,Fecha_Programada:fFP||null,Notas_Finanzas:notaFinal,Fecha_Pago:fSt==='Pagado'?new Date().toISOString().split('T')[0]:null,Fecha_Programado:fSt==='Programado'?new Date().toISOString():sel.Fecha_Programado,Historial:JSON.stringify(hF)});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:fSt,Fecha_Programada:fFP,Notas_Finanzas:notaFinal,Historial:JSON.stringify(hF)}:x));
       logBitacora(user.displayName,'Actualizó pago',(sel.Folio||sel.Title)+' → '+fSt+(fFP?' · Prog: '+fFP:''),'Finanzas');
       setSel(null);pop('✓ Guardado');
     }catch(e){pop('Error: '+e.message,'err');}
@@ -1326,6 +1382,23 @@ function saldoDisponible(madreId, sols){
   return {saldo:Math.max(0,total-pagado),pagado:pagado,total:total,pagados:pagados.length};
 }
 
+
+// ── HISTORIAL DE SOLICITUD ────────────────────────────────────────
+function parseHistorial(sol){
+  try{ return JSON.parse(sol.Historial||'[]'); }
+  catch(e){ return []; }
+}
+function buildHistorialEntry(usuario, accion, detalle, status){
+  return {fecha:new Date().toISOString(),usuario:usuario,accion:accion,detalle:detalle||'',status:status||''};
+}
+async function appendHistorial(solId, solActual, usuario, accion, detalle, status){
+  var prev=parseHistorial(solActual);
+  var entry=buildHistorialEntry(usuario,accion,detalle,status);
+  var updated=[...prev,entry];
+  await spPatch('Solicitudes',solId,{Historial:JSON.stringify(updated)});
+  return updated;
+}
+
 // ── MÓDULO CONTABILIDAD ───────────────────────────────────────────
 function ModContabilidad({user,rol,onBack,pop}){
   const [sols,setSols]=useState([]);
@@ -1346,12 +1419,29 @@ function ModContabilidad({user,rol,onBack,pop}){
   async function validar(ok){
     setSaving(true);
     const newStatus=ok?'Autorizado por contabilidad':'Rechazado por contabilidad';
+    const ITEMS=[
+      {k:'rfc',l:'RFC del emisor coincide'},
+      {k:'rs',l:'Razón social correcta'},
+      {k:'uso',l:'Uso de CFDI válido'},
+      {k:'fecha',l:'Fecha dentro del periodo'},
+      {k:'metodo',l:'Método de pago correcto'},
+      {k:'forma',l:'Forma de pago correcta'},
+    ];
+    const faltantes=ITEMS.filter(i=>!ck[i.k]).map(i=>i.l);
+    const aprobadosN=ITEMS.filter(i=>ck[i.k]).length;
+    const checkResumen=aprobadosN+'/6 puntos validados';
     try{
-      await spPatch('Solicitudes',sel.Id,{Status:newStatus});
-      await spPost('Bitacora',{Title:ok?'Validó CFDI':'Rechazó contabilidad',Usuario:user.displayName,Accion:ok?'Validó CFDI':'Rechazó en contabilidad',Detalle:(sel.Folio||sel.Title)+' → '+newStatus,Modulo:'Contabilidad',Fecha:new Date().toISOString()});
-      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:newStatus}:x));
+      await spPatch('Solicitudes',sel.Id,{
+        Status:newStatus,
+        Fecha_Validacion:new Date().toISOString(),
+        Motivo_Rechazo_Conta:!ok&&faltantes.length?faltantes.join('|'):null,
+        Notas_Conta:ck.notas||null,
+        Checklist_Conta:checkResumen,
+      });
+      await spPost('Bitacora',{Title:ok?'Validó CFDI':'Rechazó contabilidad',Usuario:user.displayName,Accion:ok?'Validó CFDI':'Rechazó',Detalle:(sel.Folio||sel.Title)+' → '+newStatus+(!ok&&faltantes.length?' | '+faltantes.join(', '):''),Modulo:'Contabilidad',Fecha:new Date().toISOString()});
+      setSols(prev=>prev.map(x=>x.Id===sel.Id?{...x,Status:newStatus,Motivo_Rechazo_Conta:!ok&&faltantes.length?faltantes.join('|'):null,Notas_Conta:ck.notas||null,Checklist_Conta:checkResumen}:x));
       setSel(null);
-      pop(ok?'✓ CFDI validado':'Solicitud rechazada');
+      pop(ok?'✓ CFDI validado':'Rechazada — '+faltantes.length+' punto(s) pendientes');
     }catch(e){pop('Error: '+e.message,'err');}
     setSaving(false);
   }
@@ -1583,7 +1673,7 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
   const ff=p=>setFiltros(prev=>({...prev,...p}));
 
   useEffect(()=>{
-    spGet('Solicitudes','',2000).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
+    spGet('Solicitudes','',500).then(s=>{setSols(s);setLoading(false);}).catch(e=>{pop('Error: '+e.message,'err');setLoading(false);});
   },[]);
 
   // ── Periodo filter ───────────────────────────────────────────
@@ -2106,6 +2196,54 @@ function DashboardEjecutivo({user,rol,onNavigate,onBack,pop}){
   </div>;
 }
 
+
+
+// ── TIMELINE DE HISTORIAL ─────────────────────────────────────────
+function HistorialTimeline({sol}){
+  var entries=parseHistorial(sol);
+  // Always add the creation as first entry if no historial
+  var all=entries.length>0?entries:[{
+    fecha:sol.Fecha_Captura||sol.Created||new Date().toISOString(),
+    usuario:sol.Solicitante||'—',
+    accion:'Creó solicitud',
+    detalle:sol.Folio||sol.Title,
+    status:'Capturado'
+  }];
+  var STATUS_ICONS={
+    'Capturado':'📋','En revisión contable':'🔍','Autorizado por contabilidad':'✅',
+    'Rechazado por contabilidad':'✗','En revisión financiera':'💼',
+    'Programado':'📆','Pagado':'✅','Cancelado':'✕','Rechazado':'✗',
+    'Creó solicitud':'📝','Aprobó solicitud':'✅','Rechazó solicitud':'✕',
+    'Canceló solicitud':'✕','Actualizó pago':'💳','Editó solicitud':'✏️',
+    'Validó CFDI':'🔍','Reprogramó pago':'📆',
+  };
+  return <div style={S.card}>
+    <div style={S.h2}>Historial de la solicitud</div>
+    {all.length===0
+      ?<div style={{fontSize:12,color:'var(--text3)',textAlign:'center',padding:16}}>Sin historial registrado</div>
+      :<div style={{position:'relative'}}>
+        <div style={{position:'absolute',left:15,top:8,bottom:8,width:2,background:'var(--border)',borderRadius:2}}/>
+        {all.map(function(e,i){
+          var isLast=i===all.length-1;
+          var icon=STATUS_ICONS[e.accion]||STATUS_ICONS[e.status]||'•';
+          return <div key={i} style={{display:'flex',gap:12,marginBottom:isLast?0:16,position:'relative'}}>
+            <div style={{width:32,height:32,borderRadius:'50%',background:isLast?'var(--green-bg)':'var(--bg2)',border:'2px solid '+(isLast?'var(--green)':'var(--border)'),display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,flexShrink:0,zIndex:1}}>
+              {icon}
+            </div>
+            <div style={{flex:1,paddingTop:4}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                <span style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{e.accion}</span>
+                {e.status&&<span style={{fontSize:10,padding:'2px 7px',borderRadius:10,background:'var(--bg2)',color:'var(--text2)',border:'1px solid var(--border)'}}>{e.status}</span>}
+              </div>
+              {e.detalle&&<div style={{fontSize:12,color:'var(--text2)',marginTop:2,lineHeight:1.5}}>{e.detalle}</div>}
+              <div style={{fontSize:11,color:'var(--text3)',marginTop:3}}>{e.usuario} · {fmtD(e.fecha)}{e.fecha&&e.fecha.length>10?' '+new Date(e.fecha).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):''}</div>
+            </div>
+          </div>;
+        })}
+      </div>
+    }
+  </div>;
+}
 
 // ── PORTAL INICIO ─────────────────────────────────────────────────
 const MODS_DEF=[
