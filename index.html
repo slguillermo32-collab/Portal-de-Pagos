@@ -43,7 +43,7 @@ const {useState,useEffect,useCallback,useRef}=React;
 // ⚠️  DEMO MODE — SOLO PARA PRUEBAS VISUALES
 // ⚠️  Cambiar a false antes de producción
 // ══════════════════════════════════════════════════════════════════
-const DEMO_MODE = false;
+const DEMO_MODE = true;
 /* ═══════════════════════════════════════════════════════════════════
    SHAREPOINT INDEXES — configurar en producción para performance
    Lista: Solicitudes → Configuración → Columnas indexadas → Agregar:
@@ -151,13 +151,8 @@ async function spGet(listName, filter='', top=200) {
   const token = await getToken();
   const siteId = await getSiteId();
   const listId = await getListId(listName);
-  const SELECT_MAP = {
-    Solicitudes:'id,fields/Title,fields/Folio,fields/Status,fields/Proveedor,fields/RFC_Proveedor,fields/Razon_Social,fields/Area,fields/Categoria,fields/Centro_Costo,fields/Importe,fields/Subtotal,fields/IVA,fields/Monto_Pagar,fields/Es_Anticipo,fields/Es_Parcial,fields/Padre_Folio,fields/Factura,fields/Tipo_Documento,fields/Metodo_Pago,fields/Prioridad,fields/Fecha_Requerida,fields/Fecha_Captura,fields/Fecha_Aprobacion,fields/Fecha_Validacion,fields/Fecha_Programado,fields/Fecha_Pago,fields/Fecha_Programada,fields/Notas,fields/Notas_Finanzas,fields/Notas_Conta,fields/Motivo_Rechazo_Conta,fields/Checklist_Conta,fields/Solicitante,fields/Historial',
-  };
-  const sel = SELECT_MAP[listName] ? '&$select=' + SELECT_MAP[listName] : '';
-  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top + sel;
+  let url = GRAPH + '/sites/' + siteId + '/lists/' + listId + '/items?expand=fields&$top=' + top;
   if (filter) url += '&$filter=' + filter;
-  if (listName === 'Solicitudes' && !filter) url += '&$orderby=fields/Fecha_Captura desc';
   let all = [];
   while (url) {
     const r = await fetch(url, {headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
